@@ -16,7 +16,7 @@ type Message struct {
 	UpdatedAt *time.Time
 }
 
-func NewMessageDomain(broadcaster broadcaster, repository messageRepository) *MessageDomain {
+func NewMessageDomain(broadcaster Broadcaster, repository MessageRepository) *MessageDomain {
 	return &MessageDomain{
 		broadcaster: broadcaster,
 		repository:  repository,
@@ -24,8 +24,8 @@ func NewMessageDomain(broadcaster broadcaster, repository messageRepository) *Me
 }
 
 type MessageDomain struct {
-	broadcaster broadcaster
-	repository  messageRepository
+	broadcaster Broadcaster
+	repository  MessageRepository
 }
 
 func (md *MessageDomain) SendMessage(userID, channelID, content string) (*Message, error) {
@@ -56,10 +56,10 @@ func (md *MessageDomain) SendMessage(userID, channelID, content string) (*Messag
 	return m, nil
 }
 
-type messageRepository interface {
+type MessageRepository interface {
 	PersistMessage(message *Message) error
 }
 
-type broadcaster interface {
+type Broadcaster interface {
 	Broadcast(message *Message) error
 }
