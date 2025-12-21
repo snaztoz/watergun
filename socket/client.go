@@ -1,7 +1,7 @@
 package socket
 
 import (
-	"bytes"
+	"encoding/json"
 	"log/slog"
 	"net/http"
 	"time"
@@ -13,7 +13,7 @@ const (
 	writeWait      = 10 * time.Second
 	pongWait       = 60 * time.Second
 	pingPeriod     = (pongWait * 9) / 10
-	maxMessageSize = 512
+	maxMessageSize = 1 << 12
 )
 
 var (
@@ -41,25 +41,24 @@ func ServeWS(hub *Hub, w http.ResponseWriter, r *http.Request) {
 
 	client.hub.register <- client
 
-	go client.writePump()
-	go client.readPump()
+	go client.setWritePump()
+	go client.setReadPump()
 }
 
 type Client struct {
-	hub             *Hub
-	conn            *websocket.Conn
-	send            chan []byte
-	isAuthenticated bool
+	hub    *Hub
+	conn   *websocket.Conn
+	send   chan []byte
+	userID string
 }
 
-func (c *Client) readPump() {
+func (c *Client) setReadPump() {
 	defer func() {
 		c.hub.unregister <- c
 		c.conn.Close()
 	}()
 
 	c.conn.SetReadLimit(maxMessageSize)
-
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
 
 	c.conn.SetPongHandler(func(string) error {
@@ -67,26 +66,35 @@ func (c *Client) readPump() {
 		return nil
 	})
 
+	c.readMessages()
+}
+
+func (c *Client) readMessages() {
 	for {
-		_, message, err := c.conn.ReadMessage()
+		_, rawMessage, err := c.conn.ReadMessage()
 		if err != nil {
-			if websocket.IsUnexpectedCloseError(
-				err,
-				websocket.CloseGoingAway,
-				websocket.CloseAbnormalClosure,
-			) {
+			if c.isConnectionClosedUnexpectedly(err) {
 				slog.Error("Connection closed unexpectedly", "err", err)
 			}
 			break
 		}
 
-		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
+		var message ReadMessage
+		if err := json.Unmarshal(rawMessage, &message); err != nil {
+			slog.Error("Failed to read message", "err", err)
+			continue
+		}
+		message.UserID = c.userID
 
-		c.hub.broadcast <- message
+		if message.shouldBeBlocked() {
+			continue
+		}
+
+		c.hub.broadcast <- []byte(message.Content)
 	}
 }
 
-func (c *Client) writePump() {
+func (c *Client) setWritePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
@@ -129,4 +137,31 @@ func (c *Client) writePump() {
 			}
 		}
 	}
+}
+
+func (c *Client) isConnectionClosedUnexpectedly(err error) bool {
+	return websocket.IsUnexpectedCloseError(
+		err,
+		websocket.CloseGoingAway,
+		websocket.CloseAbnormalClosure,
+	)
+}
+
+type ReadMessage struct {
+	UserID      string `json:"-"`
+	MessageType string `json:"type"`
+	Content     string `json:"content"`
+}
+
+func (m *ReadMessage) isAuthenticated() bool {
+	return m.UserID != ""
+}
+
+func (m *ReadMessage) isForAuthentication() bool {
+	return m.MessageType == "auth"
+}
+
+func (m *ReadMessage) shouldBeBlocked() bool {
+	return (!m.isAuthenticated() && !m.isForAuthentication()) ||
+		(m.isAuthenticated() && m.isForAuthentication())
 }
