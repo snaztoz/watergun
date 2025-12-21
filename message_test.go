@@ -21,7 +21,7 @@ func TestSendingMessage(t *testing.T) {
 
 type dummyMessageStorer struct{}
 
-func (*dummyMessageStorer) Create(m *Message) error {
+func (*dummyMessageStorer) Store(m *Message) error {
 	// no-op
 	return nil
 }

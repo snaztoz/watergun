@@ -43,7 +43,7 @@ func (d *MessageDomain) SendMessage(userID, channelID, content string) (*Message
 		CreatedAt: time.Now(),
 	}
 
-	if err := d.storer.Create(m); err != nil {
+	if err := d.storer.Store(m); err != nil {
 		slog.Error("Failed to persist message", "err", err)
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func (d *MessageDomain) SendMessage(userID, channelID, content string) (*Message
 }
 
 type MessageStorer interface {
-	Create(message *Message) error
+	Store(message *Message) error
 }
 
 type Broadcaster interface {
