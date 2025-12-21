@@ -11,10 +11,9 @@ type Channel struct {
 }
 
 type Participant struct {
-	ID              string
-	UserID          string
-	Role            string
-	LastListeningAt *time.Time
-	CreatedAt       time.Time
-	UpdatedAt       *time.Time
+	ID        string
+	UserID    string
+	Role      string
+	CreatedAt time.Time
+	UpdatedAt *time.Time
 }
