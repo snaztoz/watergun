@@ -7,9 +7,9 @@ func TestSendingMessage(t *testing.T) {
 	channelID := "fake-channel-id"
 	content := "some test message"
 
-	md := NewMessageDomain(&dummyBroadcaster{}, &dummyMessageRepository{})
+	d := NewMessageDomain(&dummyBroadcaster{}, &dummyMessageStorer{})
 
-	message, err := md.SendMessage(userID, channelID, content)
+	message, err := d.SendMessage(userID, channelID, content)
 	if err != nil {
 		t.Fatalf("failed to send message: %v\n", err)
 	}
@@ -19,9 +19,9 @@ func TestSendingMessage(t *testing.T) {
 	}
 }
 
-type dummyMessageRepository struct{}
+type dummyMessageStorer struct{}
 
-func (*dummyMessageRepository) PersistMessage(m *Message) error {
+func (*dummyMessageStorer) Create(m *Message) error {
 	// no-op
 	return nil
 }

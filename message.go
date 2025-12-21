@@ -16,19 +16,19 @@ type Message struct {
 	UpdatedAt *time.Time
 }
 
-func NewMessageDomain(broadcaster Broadcaster, repository MessageRepository) *MessageDomain {
+func NewMessageDomain(broadcaster Broadcaster, storer MessageStorer) *MessageDomain {
 	return &MessageDomain{
+		storer:      storer,
 		broadcaster: broadcaster,
-		repository:  repository,
 	}
 }
 
 type MessageDomain struct {
+	storer      MessageStorer
 	broadcaster Broadcaster
-	repository  MessageRepository
 }
 
-func (md *MessageDomain) SendMessage(userID, channelID, content string) (*Message, error) {
+func (d *MessageDomain) SendMessage(userID, channelID, content string) (*Message, error) {
 	id, err := uuid.NewV7()
 	if err != nil {
 		slog.Error("Failed to generate UUID", "err", err)
@@ -43,12 +43,12 @@ func (md *MessageDomain) SendMessage(userID, channelID, content string) (*Messag
 		CreatedAt: time.Now(),
 	}
 
-	if err := md.repository.PersistMessage(m); err != nil {
+	if err := d.storer.Create(m); err != nil {
 		slog.Error("Failed to persist message", "err", err)
 		return nil, err
 	}
 
-	if err := md.broadcaster.Broadcast(m); err != nil {
+	if err := d.broadcaster.Broadcast(m); err != nil {
 		slog.Error("Failed to broadcast message", "err", err)
 		return nil, err
 	}
@@ -56,8 +56,8 @@ func (md *MessageDomain) SendMessage(userID, channelID, content string) (*Messag
 	return m, nil
 }
 
-type MessageRepository interface {
-	PersistMessage(message *Message) error
+type MessageStorer interface {
+	Create(message *Message) error
 }
 
 type Broadcaster interface {
