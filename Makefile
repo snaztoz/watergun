@@ -6,5 +6,8 @@ OUT_FILE = watergun
 build:
 	go build -o $(OUT_FILE) $(MAIN_FILE)
 
+test:
+	go test "./..."
+
 clean:
 	rm $(OUT_FILE)
