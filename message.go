@@ -1,7 +1,6 @@
 package watergun
 
 import (
-	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -31,7 +30,7 @@ type MessageDomain struct {
 func (d *MessageDomain) SendMessage(userID, channelID, content string) (*Message, error) {
 	id, err := uuid.NewV7()
 	if err != nil {
-		slog.Error("Failed to generate UUID", "err", err)
+		logger.Error("Failed to generate UUID", "err", err)
 		return nil, err
 	}
 
@@ -44,12 +43,12 @@ func (d *MessageDomain) SendMessage(userID, channelID, content string) (*Message
 	}
 
 	if err := d.storer.Store(m); err != nil {
-		slog.Error("Failed to persist message", "err", err)
+		logger.Error("Failed to persist message", "err", err)
 		return nil, err
 	}
 
 	if err := d.broadcaster.Broadcast(m); err != nil {
-		slog.Error("Failed to broadcast message", "err", err)
+		logger.Error("Failed to broadcast message", "err", err)
 		return nil, err
 	}
 

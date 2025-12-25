@@ -1,7 +1,6 @@
 package watergun
 
 import (
-	"log/slog"
 	"time"
 )
 
@@ -37,7 +36,7 @@ type ChannelDomain struct {
 
 func (d *ChannelDomain) CreateChannel(name string) (*Channel, error) {
 	if err := d.channelCreator.ValidateChannelCreation(name); err != nil {
-		slog.Error("Validation failed", "err", err)
+		logger.Error("Validation failed", "err", err)
 		return nil, err
 	}
 
@@ -46,7 +45,7 @@ func (d *ChannelDomain) CreateChannel(name string) (*Channel, error) {
 
 func (d *ChannelDomain) AddParticipant(userID string) (*Channel, error) {
 	if err := d.channelParticipantAdder.ValidateParticipant(userID); err != nil {
-		slog.Error("Validation failed", "err", err)
+		logger.Error("Validation failed", "err", err)
 		return nil, err
 	}
 

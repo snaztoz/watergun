@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -12,6 +11,11 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/httplog/v3"
+
+	"github.com/snaztoz/watergun"
 	"github.com/snaztoz/watergun/socket"
 )
 
@@ -33,43 +37,42 @@ func main() {
 }
 
 func runServer(server *http.Server) {
-	slog.Info(fmt.Sprintf("Server is listening at port %s", port))
+	watergun.Logger().Info(fmt.Sprintf("Server is listening at port %s", port))
 
 	if err := server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
-		slog.Error("Server failed to listen at the specified port", "err", err)
+		watergun.Logger().Error(
+			"Server failed to listen at the specified port",
+			"err", err,
+		)
 		return
 	}
 }
 
 func stopServer(server *http.Server) {
-	slog.Info("Shutting down the server...")
+	watergun.Logger().Info("Shutting down the server...")
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := server.Shutdown(shutdownCtx); err != nil {
-		slog.Error("Failed to gracefully shutting down the server", "err", err)
+		watergun.Logger().Error(
+			"Failed to gracefully shutting down the server",
+			"err", err,
+		)
 		return
 	}
 
-	slog.Info("Server shutted down")
+	watergun.Logger().Info("Server shutted down")
 }
 
 func handler() http.Handler {
-	mux := http.NewServeMux()
+	r := chi.NewRouter()
 
-	mux.HandleFunc("/up", handleHealthCheck)
-	mux.HandleFunc("/socket", handleWS())
+	bindMiddlewares(r)
 
-	return mux
-}
+	r.Get("/socket", handleWS())
 
-func handleHealthCheck(w http.ResponseWriter, r *http.Request) {
-	if err := json.NewEncoder(w).Encode(map[string]any{
-		"message": "up",
-	}); err != nil {
-		slog.Error("Failed to send message", "err", err)
-	}
+	return r
 }
 
 func handleWS() func(w http.ResponseWriter, r *http.Request) {
@@ -80,4 +83,20 @@ func handleWS() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		socket.ServeWS(hub, w, r)
 	}
+}
+
+func bindMiddlewares(r *chi.Mux) {
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
+
+	r.Use(httplog.RequestLogger(watergun.Logger(), &httplog.Options{
+		Level:  slog.LevelInfo,
+		Schema: httplog.SchemaECS,
+	}))
+
+	r.Use(middleware.Recoverer)
+	r.Use(middleware.RedirectSlashes)
+	r.Use(middleware.Timeout(60 * time.Second))
+
+	r.Use(middleware.Heartbeat("/up"))
 }
