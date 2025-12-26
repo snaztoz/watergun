@@ -16,8 +16,8 @@ var (
 			},
 		),
 	).With(
-		slog.String("app", "watergun"),
-		slog.String("version", "v0.1.0"),
+		slog.String("app", "Watergun"),
+		slog.String("version", "v0.0.1"),
 	)
 )
 
