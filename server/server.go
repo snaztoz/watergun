@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -15,6 +14,7 @@ import (
 	"github.com/go-chi/httplog/v3"
 
 	"github.com/snaztoz/watergun"
+	"github.com/snaztoz/watergun/memstore"
 	"github.com/snaztoz/watergun/socket"
 )
 
@@ -104,14 +104,10 @@ func bindAdminRoutes(r *chi.Mux) {
 		r.Use(adminRoutesAuth)
 
 		r.Route("/users", func(r chi.Router) {
-			r.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
-				if err := json.NewEncoder(w).Encode(map[string]string{
-					"user": "greeter",
-				}); err != nil {
-					http.Error(w, "something went wrong", 500)
-					return
-				}
-			})
+			userStore := memstore.NewUserStore()
+			userDomain := watergun.NewUserDomain(userStore)
+
+			r.Post("/", userCreationHandler(userDomain))
 		})
 	})
 }

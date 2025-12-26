@@ -1,11 +1,16 @@
 package watergun
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type User struct {
-	ID        string
-	CreatedAt time.Time
-	UpdatedAt *time.Time
+	ID        string    `json:"id"`
+	MasterID  string    `json:"master_id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 func NewUserDomain(userCreator UserCreator) *UserDomain {
@@ -16,10 +21,22 @@ type UserDomain struct {
 	userCreator UserCreator
 }
 
-func (d *UserDomain) CreateUser(id string) (*User, error) {
-	return d.userCreator.CreateUser(id)
+func (d *UserDomain) CreateUser(masterID string) (*User, error) {
+	if err := d.userCreator.ValidateUserCreation(masterID); err != nil {
+		logger.Error("Validation failed", "err", err)
+		return nil, err
+	}
+
+	id, err := uuid.NewV7()
+	if err != nil {
+		logger.Error("Failed to generate UUID", "err", err)
+		return nil, err
+	}
+
+	return d.userCreator.CreateUser(id.String(), masterID)
 }
 
 type UserCreator interface {
-	CreateUser(id string) (*User, error)
+	ValidateUserCreation(masterID string) error
+	CreateUser(id, masterID string) (*User, error)
 }
