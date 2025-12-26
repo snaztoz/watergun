@@ -7,7 +7,7 @@ import (
 )
 
 type User struct {
-	ID        string    `json:"id"`
+	ID        string    `json:"-"`
 	MasterID  string    `json:"master_id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`

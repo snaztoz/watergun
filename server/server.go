@@ -15,7 +15,6 @@ import (
 
 	"github.com/snaztoz/watergun"
 	"github.com/snaztoz/watergun/memstore"
-	"github.com/snaztoz/watergun/socket"
 )
 
 func New(port string) *Server {
@@ -64,26 +63,15 @@ func (s *Server) Stop() {
 
 func handler() http.Handler {
 	r := chi.NewRouter()
-	bindMiddlewares(r)
 
-	r.Get("/socket", handleWS())
-
-	bindAdminRoutes(r)
+	bootstrapMiddlewares(r)
+	bootstrapPublicRoutes(r)
+	bootstrapAdminRoutes(r)
 
 	return r
 }
 
-func handleWS() func(w http.ResponseWriter, r *http.Request) {
-	hub := socket.NewHub()
-
-	go hub.Run()
-
-	return func(w http.ResponseWriter, r *http.Request) {
-		socket.ServeWS(hub, w, r)
-	}
-}
-
-func bindMiddlewares(r *chi.Mux) {
+func bootstrapMiddlewares(r *chi.Mux) {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 
@@ -95,11 +83,15 @@ func bindMiddlewares(r *chi.Mux) {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.RedirectSlashes)
 	r.Use(middleware.Timeout(60 * time.Second))
-
-	r.Use(middleware.Heartbeat("/up"))
 }
 
-func bindAdminRoutes(r *chi.Mux) {
+func bootstrapPublicRoutes(r *chi.Mux) {
+	r.Use(middleware.Heartbeat("/up"))
+
+	r.Get("/socket", handleWS())
+}
+
+func bootstrapAdminRoutes(r *chi.Mux) {
 	r.Route("/admin", func(r chi.Router) {
 		r.Use(adminRoutesAuth)
 
