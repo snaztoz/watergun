@@ -14,6 +14,7 @@ import (
 	"github.com/go-chi/httplog/v3"
 
 	"github.com/snaztoz/watergun"
+	"github.com/snaztoz/watergun/channel"
 	"github.com/snaztoz/watergun/user"
 )
 
@@ -94,6 +95,15 @@ func bootstrapPublicRoutes(r *chi.Mux) {
 func bootstrapAdminRoutes(r *chi.Mux) {
 	r.Route("/admin", func(r chi.Router) {
 		r.Use(adminRoutesAuth)
+
+		r.Route("/channels", func(r chi.Router) {
+			channelStore := channel.NewStore()
+			channelDomain := channel.NewDomain(channelStore)
+			channelHandler := channel.NewHandler(channelDomain)
+
+			r.Post("/", channelHandler.CreateChannel)
+			r.Get("/{id}", channelHandler.RetrieveChannel)
+		})
 
 		r.Route("/users", func(r chi.Router) {
 			userStore := user.NewStore()
