@@ -14,7 +14,7 @@ import (
 	"github.com/go-chi/httplog/v3"
 
 	"github.com/snaztoz/watergun"
-	"github.com/snaztoz/watergun/memstore"
+	"github.com/snaztoz/watergun/user"
 )
 
 func New(port string) *Server {
@@ -96,12 +96,13 @@ func bootstrapAdminRoutes(r *chi.Mux) {
 		r.Use(adminRoutesAuth)
 
 		r.Route("/users", func(r chi.Router) {
-			userStore := memstore.NewUserStore()
-			userValidator := memstore.NewUserValidator(*userStore)
-			userDomain := watergun.NewUserDomain(userStore, userValidator)
+			userStore := user.NewStore()
+			userValidator := user.NewValidator(userStore)
+			userDomain := user.NewDomain(userStore, userValidator)
+			userHandler := user.NewHandler(userDomain)
 
-			r.Post("/", userCreationHandler(userDomain))
-			r.Get("/{id}", userRetrievalHandler(userDomain))
+			r.Post("/", userHandler.CreateUser)
+			r.Get("/{id}", userHandler.RetrieveUser)
 		})
 	})
 }
