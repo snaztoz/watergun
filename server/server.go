@@ -97,9 +97,11 @@ func bootstrapAdminRoutes(r *chi.Mux) {
 
 		r.Route("/users", func(r chi.Router) {
 			userStore := memstore.NewUserStore()
-			userDomain := watergun.NewUserDomain(userStore)
+			userValidator := memstore.NewUserValidator(*userStore)
+			userDomain := watergun.NewUserDomain(userStore, userValidator)
 
 			r.Post("/", userCreationHandler(userDomain))
+			r.Get("/{id}", userRetrievalHandler(userDomain))
 		})
 	})
 }

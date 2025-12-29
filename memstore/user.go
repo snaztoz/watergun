@@ -17,15 +17,6 @@ type userStore struct {
 	users map[string]*watergun.User
 }
 
-func (s *userStore) ValidateUserCreation(masterID string) error {
-	for _, user := range s.users {
-		if user.MasterID == masterID {
-			return errors.New("user already exist")
-		}
-	}
-	return nil
-}
-
 func (s *userStore) CreateUser(id, masterID string) (*watergun.User, error) {
 	user := &watergun.User{
 		ID:        id,
@@ -34,7 +25,35 @@ func (s *userStore) CreateUser(id, masterID string) (*watergun.User, error) {
 		UpdatedAt: time.Now(),
 	}
 
-	s.users[id] = user
+	s.users[masterID] = user
 
 	return user, nil
+}
+
+func (s *userStore) RetrieveUser(masterID string) *watergun.User {
+	user, exist := s.users[masterID]
+	if !exist {
+		return nil
+	}
+
+	return user
+}
+
+func NewUserValidator(store userStore) *userValidator {
+	return &userValidator{
+		store: store,
+	}
+}
+
+type userValidator struct {
+	store userStore
+}
+
+func (v *userValidator) ValidateUserCreation(masterID string) error {
+	for _, user := range v.store.users {
+		if user.MasterID == masterID {
+			return errors.New("user already exist")
+		}
+	}
+	return nil
 }

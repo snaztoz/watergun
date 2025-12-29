@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/snaztoz/watergun"
 )
 
-func userCreationHandler(userDomain *watergun.UserDomain) http.HandlerFunc {
+func userCreationHandler(domain userDomain) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 
@@ -20,7 +21,7 @@ func userCreationHandler(userDomain *watergun.UserDomain) http.HandlerFunc {
 
 		// TODO: validate DTO
 
-		user, err := userDomain.CreateUser(dto.MasterID)
+		user, err := domain.CreateUser(dto.MasterID)
 		if err != nil {
 			watergun.Logger().Error("Failed to create user", "err", err)
 			http.Error(w, err.Error(), 422)
@@ -34,6 +35,29 @@ func userCreationHandler(userDomain *watergun.UserDomain) http.HandlerFunc {
 	}
 }
 
+func userRetrievalHandler(domain userDomain) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := chi.URLParam(r, "id")
+
+		user := domain.RetrieveUser(id)
+		if user == nil {
+			watergun.Logger().Error("User does not exist", "id", id)
+			http.Error(w, "User does not exist", 404)
+			return
+		}
+
+		if err := json.NewEncoder(w).Encode(user); err != nil {
+			watergun.Logger().Error("Failed to write response", "err", err)
+			http.Error(w, err.Error(), 500)
+		}
+	}
+}
+
 type UserCreationDTO struct {
 	MasterID string `json:"master_id"`
+}
+
+type userDomain interface {
+	CreateUser(masterID string) (*watergun.User, error)
+	RetrieveUser(masterID string) *watergun.User
 }
