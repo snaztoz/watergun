@@ -14,7 +14,7 @@ type store struct {
 	channels map[string]*Channel
 }
 
-func (s *store) createChannel(id, name string) (*Channel, error) {
+func (s *store) create(id, name string) (*Channel, error) {
 	now := time.Now()
 	channel := &Channel{
 		ID:           id,
@@ -29,11 +29,45 @@ func (s *store) createChannel(id, name string) (*Channel, error) {
 	return channel, nil
 }
 
-func (s *store) retrieveChannel(id string) *Channel {
+func (s *store) retrieve(id string) *Channel {
 	channel, exist := s.channels[id]
 	if !exist {
 		return nil
 	}
 
 	return channel
+}
+
+func (s *store) createParticipant(
+	channelID string,
+	participantID string,
+	userID string,
+	canPublish bool,
+) (*Participant, error) {
+	for _, participant := range s.channels[channelID].Participants {
+		if participant.UserID == userID {
+			// no-op
+			return participant, nil
+		}
+	}
+
+	now := time.Now()
+	participant := &Participant{
+		ID:         participantID,
+		UserID:     userID,
+		CanPublish: canPublish,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}
+
+	s.channels[channelID].Participants = append(
+		s.channels[channelID].Participants,
+		participant,
+	)
+
+	return participant, nil
+}
+
+func (s *store) retrieveParticipantsList(channelID string) []*Participant {
+	return s.channels[channelID].Participants
 }

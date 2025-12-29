@@ -101,8 +101,13 @@ func bootstrapAdminRoutes(r *chi.Mux) {
 			channelDomain := channel.NewDomain(channelStore)
 			channelHandler := channel.NewHandler(channelDomain)
 
-			r.Post("/", channelHandler.CreateChannel)
-			r.Get("/{id}", channelHandler.RetrieveChannel)
+			r.Post("/", channelHandler.Create)
+			r.Get("/{id}", channelHandler.Retrieve)
+
+			r.Route("/{channelID}/participants", func(r chi.Router) {
+				r.Get("/", channelHandler.RetrieveParticipantsList)
+				r.Post("/", channelHandler.CreateParticipant)
+			})
 		})
 
 		r.Route("/users", func(r chi.Router) {

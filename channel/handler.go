@@ -17,7 +17,7 @@ type handler struct {
 	domain *domain
 }
 
-func (h *handler) CreateChannel(w http.ResponseWriter, r *http.Request) {
+func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	var dto CreationDTO
@@ -29,7 +29,7 @@ func (h *handler) CreateChannel(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: validate DTO
 
-	channel, err := h.domain.createChannel(dto.ID, dto.Name)
+	channel, err := h.domain.create(dto.ID, dto.Name)
 	if err != nil {
 		watergun.Logger().Error("Failed to create channel", "err", err)
 		http.Error(w, err.Error(), 422)
@@ -42,10 +42,10 @@ func (h *handler) CreateChannel(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *handler) RetrieveChannel(w http.ResponseWriter, r *http.Request) {
+func (h *handler) Retrieve(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
-	channel := h.domain.retrieveChannel(id)
+	channel := h.domain.retrieve(id)
 	if channel == nil {
 		watergun.Logger().Error("Channel does not exist", "id", id)
 		http.Error(w, "Channel does not exist", 404)
@@ -58,7 +58,54 @@ func (h *handler) RetrieveChannel(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (h *handler) CreateParticipant(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	channelID := chi.URLParam(r, "channelID")
+
+	var dto ParticipantAdditionDTO
+	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
+		watergun.Logger().Error("Failed to decode request body", "err", err)
+		http.Error(w, err.Error(), 400)
+		return
+	}
+
+	// TODO: validate DTO
+
+	participant, err := h.domain.createParticipant(
+		channelID,
+		dto.UserID,
+		dto.CanPublish,
+	)
+	if err != nil {
+		watergun.Logger().Error("Failed to create channel", "err", err)
+		http.Error(w, err.Error(), 422)
+		return
+	}
+
+	if err := json.NewEncoder(w).Encode(participant); err != nil {
+		watergun.Logger().Error("Failed to write response", "err", err)
+		http.Error(w, err.Error(), 500)
+	}
+}
+
+func (h *handler) RetrieveParticipantsList(w http.ResponseWriter, r *http.Request) {
+	channelID := chi.URLParam(r, "channelID")
+
+	participants := h.domain.retrieveParticipantsList(channelID)
+
+	if err := json.NewEncoder(w).Encode(participants); err != nil {
+		watergun.Logger().Error("Failed to write response", "err", err)
+		http.Error(w, err.Error(), 500)
+	}
+}
+
 type CreationDTO struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
+}
+
+type ParticipantAdditionDTO struct {
+	UserID     string `json:"user_id"`
+	CanPublish bool   `json:"can_publish"`
 }
