@@ -29,7 +29,7 @@ func (h *handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: validate DTO
 
-	user, err := h.domain.createUser(dto.MasterID)
+	user, err := h.domain.createUser(dto.ID)
 	if err != nil {
 		watergun.Logger().Error("Failed to create user", "err", err)
 		http.Error(w, err.Error(), 422)
@@ -59,5 +59,5 @@ func (h *handler) RetrieveUser(w http.ResponseWriter, r *http.Request) {
 }
 
 type CreationDTO struct {
-	MasterID string `json:"master_id"`
+	ID string `json:"id"`
 }

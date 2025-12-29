@@ -107,8 +107,7 @@ func bootstrapAdminRoutes(r *chi.Mux) {
 
 		r.Route("/users", func(r chi.Router) {
 			userStore := user.NewStore()
-			userValidator := user.NewValidator(userStore)
-			userDomain := user.NewDomain(userStore, userValidator)
+			userDomain := user.NewDomain(userStore)
 			userHandler := user.NewHandler(userDomain)
 
 			r.Post("/", userHandler.CreateUser)

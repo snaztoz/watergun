@@ -6,31 +6,28 @@ import (
 	"github.com/snaztoz/watergun"
 )
 
-func NewDomain(store *store, validator *validator) *domain {
+func NewDomain(store *store) *domain {
 	return &domain{
-		store:     store,
-		validator: validator,
+		store: store,
 	}
 }
 
 type domain struct {
-	store     *store
-	validator *validator
+	store *store
 }
 
-func (d *domain) createUser(masterID string) (*User, error) {
-	if err := d.validator.validateUserCreation(masterID); err != nil {
-		watergun.Logger().Error("Validation failed", "err", err)
-		return nil, err
+func (d *domain) createUser(id string) (*User, error) {
+	if id == "" {
+		uuidV7, err := uuid.NewV7()
+		if err != nil {
+			watergun.Logger().Error("Failed to generate UUID", "err", err)
+			return nil, err
+		}
+
+		id = uuidV7.String()
 	}
 
-	id, err := uuid.NewV7()
-	if err != nil {
-		watergun.Logger().Error("Failed to generate UUID", "err", err)
-		return nil, err
-	}
-
-	return d.store.createUser(id.String(), masterID)
+	return d.store.createUser(id)
 }
 
 func (d *domain) retrieveUser(masterID string) *User {

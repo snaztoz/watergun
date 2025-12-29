@@ -1,7 +1,6 @@
 package user
 
 import (
-	"errors"
 	"time"
 )
 
@@ -15,43 +14,24 @@ type store struct {
 	users map[string]*User
 }
 
-func (s *store) createUser(id, masterID string) (*User, error) {
+func (s *store) createUser(id string) (*User, error) {
+	now := time.Now()
 	user := &User{
 		ID:        id,
-		MasterID:  masterID,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		CreatedAt: now,
+		UpdatedAt: now,
 	}
 
-	s.users[masterID] = user
+	s.users[id] = user
 
 	return user, nil
 }
 
-func (s *store) retrieveUser(masterID string) *User {
-	user, exist := s.users[masterID]
+func (s *store) retrieveUser(id string) *User {
+	user, exist := s.users[id]
 	if !exist {
 		return nil
 	}
 
 	return user
-}
-
-func NewValidator(store *store) *validator {
-	return &validator{
-		store: store,
-	}
-}
-
-type validator struct {
-	store *store
-}
-
-func (v *validator) validateUserCreation(masterID string) error {
-	for _, user := range v.store.users {
-		if user.MasterID == masterID {
-			return errors.New("user already exist")
-		}
-	}
-	return nil
 }
