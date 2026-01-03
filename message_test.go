@@ -1,6 +1,10 @@
 package watergun
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
 
 func TestSendingMessage(t *testing.T) {
 	userID := "fake-user-id"
@@ -10,13 +14,11 @@ func TestSendingMessage(t *testing.T) {
 	d := NewMessageDomain(&dummyBroadcaster{}, &dummyMessageStorer{})
 
 	message, err := d.SendMessage(userID, channelID, content)
-	if err != nil {
-		t.Fatalf("failed to send message: %v\n", err)
-	}
+	assert.Nil(t, err)
 
-	if message.UserID != userID || message.ChannelID != channelID || message.Content != content {
-		t.Fatalf("attribute(s) mismatch: %v\n", message)
-	}
+	assert.Equal(t, userID, message.UserID)
+	assert.Equal(t, channelID, message.ChannelID)
+	assert.Equal(t, content, message.Content)
 }
 
 type dummyMessageStorer struct{}

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/snaztoz/watergun"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestProtectionForAdminRoutes(t *testing.T) {
@@ -18,12 +19,7 @@ func TestProtectionForAdminRoutes(t *testing.T) {
 		http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {}),
 	).ServeHTTP(rr, req)
 
-	if status := rr.Code; status == http.StatusForbidden {
-		t.Errorf(
-			"handler returned wrong status code: got %v",
-			status,
-		)
-	}
+	assert.NotEqual(t, http.StatusForbidden, rr.Code)
 }
 
 func TestMissingBearerTokenForAdminRoutes(t *testing.T) {
@@ -34,13 +30,7 @@ func TestMissingBearerTokenForAdminRoutes(t *testing.T) {
 		http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {}),
 	).ServeHTTP(rr, req)
 
-	if status := rr.Code; status != http.StatusForbidden {
-		t.Errorf(
-			"handler returned wrong status code: want %v, got %v",
-			http.StatusForbidden,
-			status,
-		)
-	}
+	assert.Equal(t, http.StatusForbidden, rr.Code)
 }
 
 func TestIncorrectBearerTokenForAdminRoutes(t *testing.T) {
@@ -53,11 +43,5 @@ func TestIncorrectBearerTokenForAdminRoutes(t *testing.T) {
 		http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {}),
 	).ServeHTTP(rr, req)
 
-	if status := rr.Code; status != http.StatusForbidden {
-		t.Errorf(
-			"handler returned wrong status code: want %v, got %v",
-			http.StatusForbidden,
-			status,
-		)
-	}
+	assert.Equal(t, http.StatusForbidden, rr.Code)
 }

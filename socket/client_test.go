@@ -1,13 +1,16 @@
 package socket
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
 
 func TestBlockingReadMessage(t *testing.T) {
 	t.Run("unauthenticated & non-authenticating message", func(t *testing.T) {
 		m := ReadMessage{}
-		if !m.shouldBeBlocked() {
-			t.Errorf("message should be blocked: %v\n", m)
-		}
+
+		assert.True(t, m.shouldBeBlocked())
 	})
 
 	t.Run("authenticated & authenticating message", func(t *testing.T) {
@@ -16,8 +19,6 @@ func TestBlockingReadMessage(t *testing.T) {
 			MessageType: "auth",
 		}
 
-		if !m.shouldBeBlocked() {
-			t.Errorf("message should be blocked: %v\n", m)
-		}
+		assert.True(t, m.shouldBeBlocked())
 	})
 }
