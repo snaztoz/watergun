@@ -1,4 +1,4 @@
-package channel
+package server
 
 import (
 	"encoding/json"
@@ -9,18 +9,18 @@ import (
 	"github.com/snaztoz/watergun"
 )
 
-func NewHandler(domain *domain) *handler {
-	return &handler{domain: domain}
+func newChannelHandler(domain *watergun.ChannelDomain) *channelHandler {
+	return &channelHandler{domain: domain}
 }
 
-type handler struct {
-	domain *domain
+type channelHandler struct {
+	domain *watergun.ChannelDomain
 }
 
-func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
+func (h *channelHandler) Create(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	var dto CreationDTO
+	var dto ChannelCreationDTO
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
 		watergun.RespondWithError(w, err, "Failed to decode request body", 400)
 		return
@@ -28,7 +28,7 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: validate DTO
 
-	channel, err := h.domain.create(dto.ID, dto.Name)
+	channel, err := h.domain.CreateChannel(dto.ID, dto.Name)
 	if err != nil {
 		watergun.RespondWithError(w, err, "Failed to create channel", 422)
 		return
@@ -41,10 +41,10 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *handler) Retrieve(w http.ResponseWriter, r *http.Request) {
+func (h *channelHandler) Retrieve(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
-	channel := h.domain.retrieve(id)
+	channel := h.domain.Retrieve(id)
 	if channel == nil {
 		watergun.Logger().Error("Channel does not exist", "id", id)
 		http.Error(w, "Channel does not exist", 404)
@@ -56,7 +56,7 @@ func (h *handler) Retrieve(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *handler) CreateParticipant(w http.ResponseWriter, r *http.Request) {
+func (h *channelHandler) CreateParticipant(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	channelID := chi.URLParam(r, "channelID")
@@ -69,7 +69,7 @@ func (h *handler) CreateParticipant(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: validate DTO
 
-	participant, err := h.domain.createParticipant(
+	participant, err := h.domain.CreateParticipant(
 		channelID,
 		dto.UserID,
 		dto.CanPublish,
@@ -87,17 +87,17 @@ func (h *handler) CreateParticipant(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *handler) RetrieveParticipantsList(w http.ResponseWriter, r *http.Request) {
+func (h *channelHandler) RetrieveParticipantsList(w http.ResponseWriter, r *http.Request) {
 	channelID := chi.URLParam(r, "channelID")
 
-	participants := h.domain.retrieveParticipantsList(channelID)
+	participants := h.domain.RetrieveParticipantsList(channelID)
 
 	if err := json.NewEncoder(w).Encode(participants); err != nil {
 		watergun.RespondWithError(w, err, "Failed to write response", 500)
 	}
 }
 
-type CreationDTO struct {
+type ChannelCreationDTO struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 }

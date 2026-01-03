@@ -1,4 +1,4 @@
-package user
+package server
 
 import (
 	"encoding/json"
@@ -9,18 +9,18 @@ import (
 	"github.com/snaztoz/watergun"
 )
 
-func NewHandler(domain *domain) *handler {
-	return &handler{domain: domain}
+func newUserHandler(userDomain *watergun.UserDomain) *userHandler {
+	return &userHandler{userDomain: userDomain}
 }
 
-type handler struct {
-	domain *domain
+type userHandler struct {
+	userDomain *watergun.UserDomain
 }
 
-func (h *handler) CreateUser(w http.ResponseWriter, r *http.Request) {
+func (h *userHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	var dto CreationDTO
+	var dto UserCreationDTO
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
 		watergun.RespondWithError(w, err, "Failed to decode request body", 400)
 		return
@@ -28,7 +28,7 @@ func (h *handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: validate DTO
 
-	user, err := h.domain.createUser(dto.ID)
+	user, err := h.userDomain.CreateUser(dto.ID)
 	if err != nil {
 		watergun.RespondWithError(w, err, "Failed to create user", 422)
 		return
@@ -41,10 +41,10 @@ func (h *handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *handler) RetrieveUser(w http.ResponseWriter, r *http.Request) {
+func (h *userHandler) RetrieveUser(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
-	user := h.domain.retrieveUser(id)
+	user := h.userDomain.RetrieveUser(id)
 	if user == nil {
 		watergun.Logger().Error("User does not exist", "id", id)
 		http.Error(w, "User does not exist", 404)
@@ -56,6 +56,6 @@ func (h *handler) RetrieveUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type CreationDTO struct {
+type UserCreationDTO struct {
 	ID string `json:"id"`
 }

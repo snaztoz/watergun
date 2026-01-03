@@ -1,20 +1,20 @@
-package channel
+package watergun
 
 import (
 	"time"
 )
 
-func NewStore() *store {
-	return &store{
+func NewChannelStore() *channelStore {
+	return &channelStore{
 		channels: make(map[string]*Channel),
 	}
 }
 
-type store struct {
+type channelStore struct {
 	channels map[string]*Channel
 }
 
-func (s *store) create(id, name string) (*Channel, error) {
+func (s *channelStore) create(id, name string) (*Channel, error) {
 	now := time.Now()
 	channel := &Channel{
 		ID:           id,
@@ -29,7 +29,7 @@ func (s *store) create(id, name string) (*Channel, error) {
 	return channel, nil
 }
 
-func (s *store) retrieve(id string) *Channel {
+func (s *channelStore) retrieve(id string) *Channel {
 	channel, exist := s.channels[id]
 	if !exist {
 		return nil
@@ -38,7 +38,7 @@ func (s *store) retrieve(id string) *Channel {
 	return channel
 }
 
-func (s *store) createParticipant(
+func (s *channelStore) createParticipant(
 	channelID string,
 	participantID string,
 	userID string,
@@ -68,6 +68,6 @@ func (s *store) createParticipant(
 	return participant, nil
 }
 
-func (s *store) retrieveParticipantsList(channelID string) []*Participant {
+func (s *channelStore) retrieveParticipantsList(channelID string) []*Participant {
 	return s.channels[channelID].Participants
 }

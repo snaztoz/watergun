@@ -1,26 +1,24 @@
-package channel
+package watergun
 
 import (
 	"github.com/google/uuid"
-
-	"github.com/snaztoz/watergun"
 )
 
-func NewDomain(store *store) *domain {
-	return &domain{
+func NewChannelDomain(store *channelStore) *ChannelDomain {
+	return &ChannelDomain{
 		store: store,
 	}
 }
 
-type domain struct {
-	store *store
+type ChannelDomain struct {
+	store *channelStore
 }
 
-func (d *domain) create(id, name string) (*Channel, error) {
+func (d *ChannelDomain) CreateChannel(id, name string) (*Channel, error) {
 	if id == "" {
 		uuidV7, err := uuid.NewV7()
 		if err != nil {
-			watergun.Logger().Error("Failed to generate UUID", "err", err)
+			logger.Error("Failed to generate UUID", "err", err)
 			return nil, err
 		}
 
@@ -30,18 +28,18 @@ func (d *domain) create(id, name string) (*Channel, error) {
 	return d.store.create(id, name)
 }
 
-func (d *domain) retrieve(id string) *Channel {
+func (d *ChannelDomain) Retrieve(id string) *Channel {
 	return d.store.retrieve(id)
 }
 
-func (d *domain) createParticipant(
+func (d *ChannelDomain) CreateParticipant(
 	channeldID string,
 	userID string,
 	canPublish bool,
 ) (*Participant, error) {
 	uuidV7, err := uuid.NewV7()
 	if err != nil {
-		watergun.Logger().Error("Failed to generate UUID", "err", err)
+		logger.Error("Failed to generate UUID", "err", err)
 		return nil, err
 	}
 
@@ -53,6 +51,6 @@ func (d *domain) createParticipant(
 	)
 }
 
-func (d *domain) retrieveParticipantsList(channelID string) []*Participant {
+func (d *ChannelDomain) RetrieveParticipantsList(channelID string) []*Participant {
 	return d.store.retrieveParticipantsList(channelID)
 }
