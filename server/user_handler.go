@@ -17,7 +17,7 @@ type userHandler struct {
 	userDomain *watergun.UserDomain
 }
 
-func (h *userHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
+func (h *userHandler) createUser(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	var dto UserCreationDTO
@@ -41,10 +41,10 @@ func (h *userHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *userHandler) RetrieveUser(w http.ResponseWriter, r *http.Request) {
+func (h *userHandler) fetchUser(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
-	user := h.userDomain.RetrieveUser(id)
+	user := h.userDomain.FetchUser(id)
 	if user == nil {
 		watergun.Logger().Error("User does not exist", "id", id)
 		http.Error(w, "User does not exist", 404)

@@ -28,6 +28,6 @@ func (d *UserDomain) CreateUser(id string) (*User, error) {
 	return d.store.createUser(id)
 }
 
-func (d *UserDomain) RetrieveUser(masterID string) *User {
-	return d.store.retrieveUser(masterID)
+func (d *UserDomain) FetchUser(masterID string) *User {
+	return d.store.fetchUser(masterID)
 }

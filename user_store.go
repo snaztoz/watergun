@@ -27,7 +27,7 @@ func (s *userStore) createUser(id string) (*User, error) {
 	return user, nil
 }
 
-func (s *userStore) retrieveUser(id string) *User {
+func (s *userStore) fetchUser(id string) *User {
 	user, exist := s.users[id]
 	if !exist {
 		return nil

@@ -17,7 +17,7 @@ type channelHandler struct {
 	domain *watergun.ChannelDomain
 }
 
-func (h *channelHandler) Create(w http.ResponseWriter, r *http.Request) {
+func (h *channelHandler) createChannel(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	var dto ChannelCreationDTO
@@ -41,10 +41,10 @@ func (h *channelHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *channelHandler) Retrieve(w http.ResponseWriter, r *http.Request) {
+func (h *channelHandler) fetchChannel(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
-	channel := h.domain.Retrieve(id)
+	channel := h.domain.Fetch(id)
 	if channel == nil {
 		watergun.Logger().Error("Channel does not exist", "id", id)
 		http.Error(w, "Channel does not exist", 404)
@@ -56,12 +56,12 @@ func (h *channelHandler) Retrieve(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *channelHandler) CreateParticipant(w http.ResponseWriter, r *http.Request) {
+func (h *channelHandler) createParticipant(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	channelID := chi.URLParam(r, "channelID")
 
-	var dto ParticipantAdditionDTO
+	var dto ParticipantCreationDTO
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
 		watergun.RespondWithError(w, err, "Failed to decode request body", 400)
 		return
@@ -87,10 +87,10 @@ func (h *channelHandler) CreateParticipant(w http.ResponseWriter, r *http.Reques
 	}
 }
 
-func (h *channelHandler) RetrieveParticipantsList(w http.ResponseWriter, r *http.Request) {
+func (h *channelHandler) fetchParticipantsList(w http.ResponseWriter, r *http.Request) {
 	channelID := chi.URLParam(r, "channelID")
 
-	participants := h.domain.RetrieveParticipantsList(channelID)
+	participants := h.domain.FetchParticipantsList(channelID)
 
 	if err := json.NewEncoder(w).Encode(participants); err != nil {
 		watergun.RespondWithError(w, err, "Failed to write response", 500)
@@ -102,7 +102,7 @@ type ChannelCreationDTO struct {
 	Name string `json:"name"`
 }
 
-type ParticipantAdditionDTO struct {
+type ParticipantCreationDTO struct {
 	UserID     string `json:"user_id"`
 	CanPublish bool   `json:"can_publish"`
 }

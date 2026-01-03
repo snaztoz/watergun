@@ -106,12 +106,12 @@ func bootstrapAdminRoutes(r *chi.Mux) {
 			channelDomain := watergun.NewChannelDomain(channelStore)
 			channelHandler := newChannelHandler(channelDomain)
 
-			r.Post("/", channelHandler.Create)
-			r.Get("/{id}", channelHandler.Retrieve)
+			r.Post("/", channelHandler.createChannel)
+			r.Get("/{id}", channelHandler.fetchChannel)
 
 			r.Route("/{channelID}/participants", func(r chi.Router) {
-				r.Get("/", channelHandler.RetrieveParticipantsList)
-				r.Post("/", channelHandler.CreateParticipant)
+				r.Get("/", channelHandler.fetchParticipantsList)
+				r.Post("/", channelHandler.createParticipant)
 			})
 		})
 
@@ -120,8 +120,8 @@ func bootstrapAdminRoutes(r *chi.Mux) {
 			userDomain := watergun.NewUserDomain(userStore)
 			userHandler := newUserHandler(userDomain)
 
-			r.Post("/", userHandler.CreateUser)
-			r.Get("/{id}", userHandler.RetrieveUser)
+			r.Post("/", userHandler.createUser)
+			r.Get("/{id}", userHandler.fetchUser)
 		})
 	})
 }

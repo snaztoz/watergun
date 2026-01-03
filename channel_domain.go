@@ -25,18 +25,14 @@ func (d *ChannelDomain) CreateChannel(id, name string) (*Channel, error) {
 		id = uuidV7.String()
 	}
 
-	return d.store.create(id, name)
+	return d.store.createChannel(id, name)
 }
 
-func (d *ChannelDomain) Retrieve(id string) *Channel {
-	return d.store.retrieve(id)
+func (d *ChannelDomain) Fetch(id string) *Channel {
+	return d.store.fetchChannel(id)
 }
 
-func (d *ChannelDomain) CreateParticipant(
-	channeldID string,
-	userID string,
-	canPublish bool,
-) (*Participant, error) {
+func (d *ChannelDomain) CreateParticipant(channeldID, userID string, canPublish bool) (*Participant, error) {
 	uuidV7, err := uuid.NewV7()
 	if err != nil {
 		logger.Error("Failed to generate UUID", "err", err)
@@ -51,6 +47,6 @@ func (d *ChannelDomain) CreateParticipant(
 	)
 }
 
-func (d *ChannelDomain) RetrieveParticipantsList(channelID string) []*Participant {
-	return d.store.retrieveParticipantsList(channelID)
+func (d *ChannelDomain) FetchParticipantsList(channelID string) []*Participant {
+	return d.store.fetchParticipantsList(channelID)
 }
