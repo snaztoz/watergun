@@ -22,8 +22,7 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 
 	var dto CreationDTO
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
-		watergun.Logger().Error("Failed to decode request body", "err", err)
-		http.Error(w, err.Error(), 400)
+		watergun.RespondWithError(w, err, "Failed to decode request body", 400)
 		return
 	}
 
@@ -31,14 +30,14 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 
 	channel, err := h.domain.create(dto.ID, dto.Name)
 	if err != nil {
-		watergun.Logger().Error("Failed to create channel", "err", err)
-		http.Error(w, err.Error(), 422)
+		watergun.RespondWithError(w, err, "Failed to create channel", 422)
 		return
 	}
 
+	w.WriteHeader(201)
+
 	if err := json.NewEncoder(w).Encode(channel); err != nil {
-		watergun.Logger().Error("Failed to write response", "err", err)
-		http.Error(w, err.Error(), 500)
+		watergun.RespondWithError(w, err, "Failed to write response", 500)
 	}
 }
 
@@ -53,8 +52,7 @@ func (h *handler) Retrieve(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewEncoder(w).Encode(channel); err != nil {
-		watergun.Logger().Error("Failed to write response", "err", err)
-		http.Error(w, err.Error(), 500)
+		watergun.RespondWithError(w, err, "Failed to write response", 500)
 	}
 }
 
@@ -65,8 +63,7 @@ func (h *handler) CreateParticipant(w http.ResponseWriter, r *http.Request) {
 
 	var dto ParticipantAdditionDTO
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
-		watergun.Logger().Error("Failed to decode request body", "err", err)
-		http.Error(w, err.Error(), 400)
+		watergun.RespondWithError(w, err, "Failed to decode request body", 400)
 		return
 	}
 
@@ -78,14 +75,15 @@ func (h *handler) CreateParticipant(w http.ResponseWriter, r *http.Request) {
 		dto.CanPublish,
 	)
 	if err != nil {
-		watergun.Logger().Error("Failed to create channel", "err", err)
-		http.Error(w, err.Error(), 422)
+		watergun.RespondWithError(w, err, "Failed to create channel participant", 422)
 		return
 	}
 
+	w.WriteHeader(201)
+
 	if err := json.NewEncoder(w).Encode(participant); err != nil {
-		watergun.Logger().Error("Failed to write response", "err", err)
-		http.Error(w, err.Error(), 500)
+		watergun.RespondWithError(w, err, "Failed to write response", 500)
+		return
 	}
 }
 
@@ -95,8 +93,7 @@ func (h *handler) RetrieveParticipantsList(w http.ResponseWriter, r *http.Reques
 	participants := h.domain.retrieveParticipantsList(channelID)
 
 	if err := json.NewEncoder(w).Encode(participants); err != nil {
-		watergun.Logger().Error("Failed to write response", "err", err)
-		http.Error(w, err.Error(), 500)
+		watergun.RespondWithError(w, err, "Failed to write response", 500)
 	}
 }
 

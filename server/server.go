@@ -96,6 +96,13 @@ func bootstrapAdminRoutes(r *chi.Mux) {
 	r.Route("/admin", func(r chi.Router) {
 		r.Use(adminRoutesAuth)
 
+		r.Use(func(next http.Handler) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				next.ServeHTTP(w, r)
+			})
+		})
+
 		r.Route("/channels", func(r chi.Router) {
 			channelStore := channel.NewStore()
 			channelDomain := channel.NewDomain(channelStore)

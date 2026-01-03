@@ -22,8 +22,7 @@ func (h *handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	var dto CreationDTO
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
-		watergun.Logger().Error("Failed to decode request body", "err", err)
-		http.Error(w, err.Error(), 400)
+		watergun.RespondWithError(w, err, "Failed to decode request body", 400)
 		return
 	}
 
@@ -31,14 +30,14 @@ func (h *handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.domain.createUser(dto.ID)
 	if err != nil {
-		watergun.Logger().Error("Failed to create user", "err", err)
-		http.Error(w, err.Error(), 422)
+		watergun.RespondWithError(w, err, "Failed to create user", 422)
 		return
 	}
 
+	w.WriteHeader(201)
+
 	if err := json.NewEncoder(w).Encode(user); err != nil {
-		watergun.Logger().Error("Failed to write response", "err", err)
-		http.Error(w, err.Error(), 500)
+		watergun.RespondWithError(w, err, "Failed to write response", 500)
 	}
 }
 
@@ -53,8 +52,7 @@ func (h *handler) RetrieveUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewEncoder(w).Encode(user); err != nil {
-		watergun.Logger().Error("Failed to write response", "err", err)
-		http.Error(w, err.Error(), 500)
+		watergun.RespondWithError(w, err, "Failed to write response", 500)
 	}
 }
 
