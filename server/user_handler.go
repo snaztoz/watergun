@@ -22,7 +22,7 @@ func (h *userHandler) createUser(w http.ResponseWriter, r *http.Request) {
 
 	var dto UserCreationDTO
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
-		watergun.RespondWithError(w, err, "Failed to decode request body", 400)
+		respondWithError(w, err, "Failed to decode request body", 400)
 		return
 	}
 
@@ -30,15 +30,13 @@ func (h *userHandler) createUser(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.userDomain.CreateUser(dto.ID)
 	if err != nil {
-		watergun.RespondWithError(w, err, "Failed to create user", 422)
+		respondWithError(w, err, "Failed to create user", 422)
 		return
 	}
 
 	w.WriteHeader(201)
 
-	if err := json.NewEncoder(w).Encode(user); err != nil {
-		watergun.RespondWithError(w, err, "Failed to write response", 500)
-	}
+	respondWithJSON(w, user)
 }
 
 func (h *userHandler) fetchUser(w http.ResponseWriter, r *http.Request) {
@@ -51,9 +49,7 @@ func (h *userHandler) fetchUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := json.NewEncoder(w).Encode(user); err != nil {
-		watergun.RespondWithError(w, err, "Failed to write response", 500)
-	}
+	respondWithJSON(w, user)
 }
 
 type UserCreationDTO struct {

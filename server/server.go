@@ -135,10 +135,7 @@ func adminRoutesAuth(next http.Handler) http.Handler {
 			return
 		}
 
-		if key := strings.TrimPrefix(
-			authorization,
-			"Bearer ",
-		); key != watergun.AdminAPIKey() {
+		if key := strings.TrimPrefix(authorization, "Bearer "); key != watergun.AdminAPIKey() {
 			http.Error(w, http.StatusText(403), 403)
 			return
 		}

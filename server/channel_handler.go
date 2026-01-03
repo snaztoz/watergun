@@ -22,7 +22,7 @@ func (h *channelHandler) createChannel(w http.ResponseWriter, r *http.Request) {
 
 	var dto ChannelCreationDTO
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
-		watergun.RespondWithError(w, err, "Failed to decode request body", 400)
+		respondWithError(w, err, "Failed to decode request body", 400)
 		return
 	}
 
@@ -30,15 +30,13 @@ func (h *channelHandler) createChannel(w http.ResponseWriter, r *http.Request) {
 
 	channel, err := h.domain.CreateChannel(dto.ID, dto.Name)
 	if err != nil {
-		watergun.RespondWithError(w, err, "Failed to create channel", 422)
+		respondWithError(w, err, "Failed to create channel", 422)
 		return
 	}
 
 	w.WriteHeader(201)
 
-	if err := json.NewEncoder(w).Encode(channel); err != nil {
-		watergun.RespondWithError(w, err, "Failed to write response", 500)
-	}
+	respondWithJSON(w, channel)
 }
 
 func (h *channelHandler) fetchChannel(w http.ResponseWriter, r *http.Request) {
@@ -51,9 +49,7 @@ func (h *channelHandler) fetchChannel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := json.NewEncoder(w).Encode(channel); err != nil {
-		watergun.RespondWithError(w, err, "Failed to write response", 500)
-	}
+	respondWithJSON(w, channel)
 }
 
 func (h *channelHandler) createParticipant(w http.ResponseWriter, r *http.Request) {
@@ -63,7 +59,7 @@ func (h *channelHandler) createParticipant(w http.ResponseWriter, r *http.Reques
 
 	var dto ParticipantCreationDTO
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
-		watergun.RespondWithError(w, err, "Failed to decode request body", 400)
+		respondWithError(w, err, "Failed to decode request body", 400)
 		return
 	}
 
@@ -75,16 +71,13 @@ func (h *channelHandler) createParticipant(w http.ResponseWriter, r *http.Reques
 		dto.CanPublish,
 	)
 	if err != nil {
-		watergun.RespondWithError(w, err, "Failed to create channel participant", 422)
+		respondWithError(w, err, "Failed to create channel participant", 422)
 		return
 	}
 
 	w.WriteHeader(201)
 
-	if err := json.NewEncoder(w).Encode(participant); err != nil {
-		watergun.RespondWithError(w, err, "Failed to write response", 500)
-		return
-	}
+	respondWithJSON(w, participant)
 }
 
 func (h *channelHandler) fetchParticipantsList(w http.ResponseWriter, r *http.Request) {
@@ -92,9 +85,7 @@ func (h *channelHandler) fetchParticipantsList(w http.ResponseWriter, r *http.Re
 
 	participants := h.domain.FetchParticipantsList(channelID)
 
-	if err := json.NewEncoder(w).Encode(participants); err != nil {
-		watergun.RespondWithError(w, err, "Failed to write response", 500)
-	}
+	respondWithJSON(w, participants)
 }
 
 type ChannelCreationDTO struct {

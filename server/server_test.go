@@ -19,7 +19,7 @@ func TestProtectionForAdminRoutes(t *testing.T) {
 		http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {}),
 	).ServeHTTP(rr, req)
 
-	assert.NotEqual(t, http.StatusForbidden, rr.Code)
+	assert.NotEqual(t, 403, rr.Code)
 }
 
 func TestMissingBearerTokenForAdminRoutes(t *testing.T) {
@@ -30,7 +30,7 @@ func TestMissingBearerTokenForAdminRoutes(t *testing.T) {
 		http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {}),
 	).ServeHTTP(rr, req)
 
-	assert.Equal(t, http.StatusForbidden, rr.Code)
+	assert.Equal(t, 403, rr.Code)
 }
 
 func TestIncorrectBearerTokenForAdminRoutes(t *testing.T) {
@@ -43,5 +43,5 @@ func TestIncorrectBearerTokenForAdminRoutes(t *testing.T) {
 		http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {}),
 	).ServeHTTP(rr, req)
 
-	assert.Equal(t, http.StatusForbidden, rr.Code)
+	assert.Equal(t, 403, rr.Code)
 }
