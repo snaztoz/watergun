@@ -1,4 +1,4 @@
-package watergun
+package channel
 
 import (
 	"time"

@@ -13,7 +13,9 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httplog/v3"
 
-	"github.com/snaztoz/watergun"
+	"github.com/snaztoz/watergun/channel"
+	"github.com/snaztoz/watergun/log"
+	"github.com/snaztoz/watergun/user"
 )
 
 func New(port string) *Server {
@@ -32,32 +34,26 @@ type Server struct {
 }
 
 func (s *Server) Run() {
-	watergun.Logger().Info(fmt.Sprintf("Server is listening at port %s", s.port))
+	log.Info(fmt.Sprintf("Server is listening at port %s", s.port))
 
 	if err := s.httpServer.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
-		watergun.Logger().Error(
-			"Server failed to listen at the specified port",
-			"err", err,
-		)
+		log.Error("Server failed to listen at the specified port", "err", err)
 		return
 	}
 }
 
 func (s *Server) Stop() {
-	watergun.Logger().Info("Shutting down the server...")
+	log.Info("Shutting down the server...")
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := s.httpServer.Shutdown(shutdownCtx); err != nil {
-		watergun.Logger().Error(
-			"Failed to gracefully shutting down the server",
-			"err", err,
-		)
+		log.Error("Failed to gracefully shutting down the server", "err", err)
 		return
 	}
 
-	watergun.Logger().Info("Server shutted down")
+	log.Info("Server shutted down")
 }
 
 func handler() http.Handler {
@@ -74,7 +70,7 @@ func bootstrapMiddlewares(r *chi.Mux) {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 
-	r.Use(httplog.RequestLogger(watergun.Logger(), &httplog.Options{
+	r.Use(httplog.RequestLogger(log.Logger(), &httplog.Options{
 		Level:  slog.LevelInfo,
 		Schema: httplog.SchemaECS,
 	}))
@@ -102,26 +98,26 @@ func bootstrapAdminRoutes(r *chi.Mux) {
 		})
 
 		r.Route("/channels", func(r chi.Router) {
-			channelStore := watergun.NewChannelStore()
-			channelDomain := watergun.NewChannelDomain(channelStore)
-			channelHandler := newChannelHandler(channelDomain)
+			channelStore := channel.NewStore()
+			channelDomain := channel.NewDomain(channelStore)
+			channelHandler := channel.NewHandler(channelDomain)
 
-			r.Post("/", channelHandler.createChannel)
-			r.Get("/{id}", channelHandler.fetchChannel)
+			r.Post("/", channelHandler.CreateChannel)
+			r.Get("/{id}", channelHandler.FetchChannel)
 
 			r.Route("/{channelID}/participants", func(r chi.Router) {
-				r.Get("/", channelHandler.fetchParticipantsList)
-				r.Post("/", channelHandler.createParticipant)
+				r.Get("/", channelHandler.FetchParticipantsList)
+				r.Post("/", channelHandler.CreateParticipant)
 			})
 		})
 
 		r.Route("/users", func(r chi.Router) {
-			userStore := watergun.NewUserStore()
-			userDomain := watergun.NewUserDomain(userStore)
-			userHandler := newUserHandler(userDomain)
+			userStore := user.NewStore()
+			userDomain := user.NewDomain(userStore)
+			userHandler := user.NewHandler(userDomain)
 
-			r.Post("/", userHandler.createUser)
-			r.Get("/{id}", userHandler.fetchUser)
+			r.Post("/", userHandler.CreateUser)
+			r.Get("/{id}", userHandler.FetchUser)
 		})
 	})
 }
@@ -135,7 +131,7 @@ func adminRoutesAuth(next http.Handler) http.Handler {
 			return
 		}
 
-		if key := strings.TrimPrefix(authorization, "Bearer "); key != watergun.AdminAPIKey() {
+		if key := strings.TrimPrefix(authorization, "Bearer "); key != adminAPIKey() {
 			http.Error(w, http.StatusText(403), 403)
 			return
 		}

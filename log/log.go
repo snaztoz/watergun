@@ -1,4 +1,4 @@
-package watergun
+package log
 
 import (
 	"log/slog"
@@ -23,4 +23,12 @@ var (
 
 func Logger() *slog.Logger {
 	return logger
+}
+
+func Info(msg string, args ...any) {
+	logger.Info(msg, args...)
+}
+
+func Error(msg string, args ...any) {
+	logger.Error(msg, args...)
 }

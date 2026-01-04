@@ -1,20 +1,20 @@
-package watergun
+package channel
 
 import (
 	"time"
 )
 
-func NewChannelStore() *channelStore {
-	return &channelStore{
+func NewStore() *store {
+	return &store{
 		channels: make(map[string]*Channel),
 	}
 }
 
-type channelStore struct {
+type store struct {
 	channels map[string]*Channel
 }
 
-func (s *channelStore) createChannel(id, name string) (*Channel, error) {
+func (s *store) createChannel(id, name string) (*Channel, error) {
 	now := time.Now()
 	channel := &Channel{
 		ID:           id,
@@ -29,7 +29,7 @@ func (s *channelStore) createChannel(id, name string) (*Channel, error) {
 	return channel, nil
 }
 
-func (s *channelStore) fetchChannel(id string) *Channel {
+func (s *store) fetchChannel(id string) *Channel {
 	channel, exist := s.channels[id]
 	if !exist {
 		return nil
@@ -38,7 +38,7 @@ func (s *channelStore) fetchChannel(id string) *Channel {
 	return channel
 }
 
-func (s *channelStore) createParticipant(channelID, participantID, userID string, canPublish bool) (*Participant, error) {
+func (s *store) createParticipant(channelID, participantID, userID string, canPublish bool) (*Participant, error) {
 	for _, participant := range s.channels[channelID].Participants {
 		if participant.UserID == userID {
 			// no-op
@@ -63,6 +63,6 @@ func (s *channelStore) createParticipant(channelID, participantID, userID string
 	return participant, nil
 }
 
-func (s *channelStore) fetchParticipantsList(channelID string) []*Participant {
+func (s *store) fetchParticipantsList(channelID string) []*Participant {
 	return s.channels[channelID].Participants
 }

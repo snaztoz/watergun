@@ -1,20 +1,20 @@
-package watergun
+package user
 
 import (
 	"time"
 )
 
-func NewUserStore() *userStore {
-	return &userStore{
+func NewStore() *store {
+	return &store{
 		users: make(map[string]*User),
 	}
 }
 
-type userStore struct {
+type store struct {
 	users map[string]*User
 }
 
-func (s *userStore) createUser(id string) (*User, error) {
+func (s *store) createUser(id string) (*User, error) {
 	now := time.Now()
 	user := &User{
 		ID:        id,
@@ -27,7 +27,7 @@ func (s *userStore) createUser(id string) (*User, error) {
 	return user, nil
 }
 
-func (s *userStore) fetchUser(id string) *User {
+func (s *store) fetchUser(id string) *User {
 	user, exist := s.users[id]
 	if !exist {
 		return nil

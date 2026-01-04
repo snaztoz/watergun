@@ -1,4 +1,4 @@
-package watergun
+package message
 
 import (
 	"testing"

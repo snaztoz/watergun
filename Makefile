@@ -1,4 +1,4 @@
-MAIN_FILE = "cmd/main.go"
+MAIN_FILE = "watergun.go"
 OUT_FILE = watergun
 
 .PHONY: build clean

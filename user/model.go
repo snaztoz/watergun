@@ -1,4 +1,4 @@
-package watergun
+package user
 
 import (
 	"time"

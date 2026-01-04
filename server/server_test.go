@@ -5,7 +5,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/snaztoz/watergun"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -13,7 +12,7 @@ func TestProtectionForAdminRoutes(t *testing.T) {
 	req := httptest.NewRequest("GET", "/admin", nil)
 	rr := httptest.NewRecorder()
 
-	req.Header.Add("Authorization", "Bearer "+watergun.AdminAPIKey())
+	req.Header.Add("Authorization", "Bearer "+adminAPIKey())
 
 	adminRoutesAuth(
 		http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {}),
