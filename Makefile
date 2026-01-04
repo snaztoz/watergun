@@ -1,7 +1,7 @@
 MAIN_FILE = "watergun.go"
-OUT_FILE = watergun
+OUT_FILE = "./tmp/watergun"
 
-.PHONY: build clean
+.PHONY: build test clean
 
 build:
 	go build -o $(OUT_FILE) $(MAIN_FILE)
