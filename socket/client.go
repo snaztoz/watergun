@@ -2,11 +2,11 @@ package socket
 
 import (
 	"encoding/json"
-	"log/slog"
 	"net/http"
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/snaztoz/watergun/log"
 )
 
 const (
@@ -29,7 +29,7 @@ var upgrader = websocket.Upgrader{
 func ServeWS(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		slog.Error("Failed to upgrade to WebSocket", "err", err)
+		log.Error("Failed to upgrade to WebSocket", "err", err)
 		return
 	}
 
@@ -74,14 +74,14 @@ func (c *Client) readMessages() {
 		_, rawMessage, err := c.conn.ReadMessage()
 		if err != nil {
 			if c.isConnectionClosedUnexpectedly(err) {
-				slog.Error("Connection closed unexpectedly", "err", err)
+				log.Error("Connection closed unexpectedly", "err", err)
 			}
 			break
 		}
 
 		var message ReadMessage
 		if err := json.Unmarshal(rawMessage, &message); err != nil {
-			slog.Error("Failed to read message", "err", err)
+			log.Error("Failed to read message", "err", err)
 			continue
 		}
 		message.UserID = c.userID
