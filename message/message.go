@@ -11,7 +11,7 @@ import (
 type Message struct {
 	ID        string
 	UserID    string
-	ChannelID string
+	RoomID    string
 	Content   string
 	CreatedAt time.Time
 	UpdatedAt *time.Time
@@ -29,7 +29,7 @@ type MessageDomain struct {
 	broadcaster Broadcaster
 }
 
-func (d *MessageDomain) SendMessage(userID, channelID, content string) (*Message, error) {
+func (d *MessageDomain) SendMessage(userID, roomID, content string) (*Message, error) {
 	id, err := uuid.NewV7()
 	if err != nil {
 		log.Error("Failed to generate UUID", "err", err)
@@ -39,7 +39,7 @@ func (d *MessageDomain) SendMessage(userID, channelID, content string) (*Message
 	m := &Message{
 		ID:        id.String(),
 		UserID:    userID,
-		ChannelID: channelID,
+		RoomID:    roomID,
 		Content:   content,
 		CreatedAt: time.Now(),
 	}

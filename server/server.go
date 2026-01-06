@@ -13,8 +13,8 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/httplog/v3"
 
-	"github.com/snaztoz/watergun/channel"
 	"github.com/snaztoz/watergun/log"
+	"github.com/snaztoz/watergun/room"
 	"github.com/snaztoz/watergun/socket"
 	"github.com/snaztoz/watergun/user"
 )
@@ -93,17 +93,17 @@ func bootstrapRoutes(r *chi.Mux) {
 		r.Use(adminRoutesAuth)
 		r.Use(jsonContentType)
 
-		r.Route("/channels", func(r chi.Router) {
-			channelStore := channel.NewStore()
-			channelDomain := channel.NewDomain(channelStore)
-			channelHandler := channel.NewHandler(channelDomain)
+		r.Route("/rooms", func(r chi.Router) {
+			roomStore := room.NewStore()
+			roomDomain := room.NewDomain(roomStore)
+			roomHandler := room.NewHandler(roomDomain)
 
-			r.Post("/", channelHandler.CreateChannel)
-			r.Get("/{id}", channelHandler.FetchChannel)
+			r.Post("/", roomHandler.CreateRoom)
+			r.Get("/{id}", roomHandler.FetchRoom)
 
-			r.Route("/{channelID}/participants", func(r chi.Router) {
-				r.Get("/", channelHandler.FetchParticipantsList)
-				r.Post("/", channelHandler.CreateParticipant)
+			r.Route("/{roomID}/participants", func(r chi.Router) {
+				r.Get("/", roomHandler.FetchParticipantsList)
+				r.Post("/", roomHandler.CreateParticipant)
 			})
 		})
 

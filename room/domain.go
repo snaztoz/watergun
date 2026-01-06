@@ -1,7 +1,8 @@
-package channel
+package room
 
 import (
 	"github.com/google/uuid"
+
 	"github.com/snaztoz/watergun/log"
 )
 
@@ -15,7 +16,7 @@ type domain struct {
 	store *store
 }
 
-func (d *domain) createChannel(id, name string) (*Channel, error) {
+func (d *domain) createRoom(id, name string) (*Model, error) {
 	if id == "" {
 		uuidV7, err := uuid.NewV7()
 		if err != nil {
@@ -26,14 +27,14 @@ func (d *domain) createChannel(id, name string) (*Channel, error) {
 		id = uuidV7.String()
 	}
 
-	return d.store.createChannel(id, name)
+	return d.store.createRoom(id, name)
 }
 
-func (d *domain) fetchChannel(id string) *Channel {
-	return d.store.fetchChannel(id)
+func (d *domain) fetchRoom(id string) *Model {
+	return d.store.fetchRoom(id)
 }
 
-func (d *domain) createParticipant(channelID, userID string, canPublish bool) (*Participant, error) {
+func (d *domain) createParticipant(roomID, userID string, canPublish bool) (*ParticipantModel, error) {
 	uuidV7, err := uuid.NewV7()
 	if err != nil {
 		log.Error("Failed to generate UUID", "err", err)
@@ -41,13 +42,13 @@ func (d *domain) createParticipant(channelID, userID string, canPublish bool) (*
 	}
 
 	return d.store.createParticipant(
-		channelID,
+		roomID,
 		uuidV7.String(),
 		userID,
 		canPublish,
 	)
 }
 
-func (d *domain) fetchParticipantsList(channelID string) []*Participant {
-	return d.store.fetchParticipantsList(channelID)
+func (d *domain) fetchParticipantsList(roomID string) []*ParticipantModel {
+	return d.store.fetchParticipantsList(roomID)
 }

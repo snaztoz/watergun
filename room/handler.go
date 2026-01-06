@@ -1,10 +1,11 @@
-package channel
+package room
 
 import (
 	"encoding/json"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+
 	"github.com/snaztoz/watergun/log"
 	"github.com/snaztoz/watergun/response"
 )
@@ -17,10 +18,10 @@ type handler struct {
 	domain *domain
 }
 
-func (h *handler) CreateChannel(w http.ResponseWriter, r *http.Request) {
+func (h *handler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	var dto ChannelCreationDTO
+	var dto RoomCreationDTO
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
 		response.SendErrorJSON(w, err, "Failed to decode request body", 400)
 		return
@@ -28,34 +29,34 @@ func (h *handler) CreateChannel(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: validate DTO
 
-	channel, err := h.domain.createChannel(dto.ID, dto.Name)
+	room, err := h.domain.createRoom(dto.ID, dto.Name)
 	if err != nil {
-		response.SendErrorJSON(w, err, "Failed to create channel", 422)
+		response.SendErrorJSON(w, err, "Failed to create room", 422)
 		return
 	}
 
 	w.WriteHeader(201)
 
-	response.SendJSON(w, channel)
+	response.SendJSON(w, room)
 }
 
-func (h *handler) FetchChannel(w http.ResponseWriter, r *http.Request) {
+func (h *handler) FetchRoom(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
-	channel := h.domain.fetchChannel(id)
-	if channel == nil {
-		log.Error("Channel does not exist", "id", id)
-		http.Error(w, "Channel does not exist", 404)
+	room := h.domain.fetchRoom(id)
+	if room == nil {
+		log.Error("Room does not exist", "id", id)
+		http.Error(w, "Room does not exist", 404)
 		return
 	}
 
-	response.SendJSON(w, channel)
+	response.SendJSON(w, room)
 }
 
 func (h *handler) CreateParticipant(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	channelID := chi.URLParam(r, "channelID")
+	roomID := chi.URLParam(r, "roomID")
 
 	var dto ParticipantCreationDTO
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
@@ -66,12 +67,12 @@ func (h *handler) CreateParticipant(w http.ResponseWriter, r *http.Request) {
 	// TODO: validate DTO
 
 	participant, err := h.domain.createParticipant(
-		channelID,
+		roomID,
 		dto.UserID,
 		dto.CanPublish,
 	)
 	if err != nil {
-		response.SendErrorJSON(w, err, "Failed to create channel participant", 422)
+		response.SendErrorJSON(w, err, "Failed to create room participant", 422)
 		return
 	}
 
@@ -81,14 +82,14 @@ func (h *handler) CreateParticipant(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) FetchParticipantsList(w http.ResponseWriter, r *http.Request) {
-	channelID := chi.URLParam(r, "channelID")
+	roomID := chi.URLParam(r, "roomID")
 
-	participants := h.domain.fetchParticipantsList(channelID)
+	participants := h.domain.fetchParticipantsList(roomID)
 
 	response.SendJSON(w, participants)
 }
 
-type ChannelCreationDTO struct {
+type RoomCreationDTO struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 }

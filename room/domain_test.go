@@ -1,4 +1,4 @@
-package channel
+package room
 
 import (
 	"testing"
@@ -8,23 +8,23 @@ import (
 )
 
 func TestCreatingUserWithID(t *testing.T) {
-	channelStore := NewStore()
-	channelDomain := NewDomain(channelStore)
+	roomStore := NewStore()
+	roomDomain := NewDomain(roomStore)
 
 	id := "some-id-provided-externally"
 
-	channel, err := channelDomain.createChannel(id, "some-name")
+	room, err := roomDomain.createRoom(id, "some-name")
 	assert.Nil(t, err)
 
-	assert.Equal(t, id, channel.ID)
+	assert.Equal(t, id, room.ID)
 }
 
 func TestCreatingUserWithoutID(t *testing.T) {
 	userStore := NewStore()
 	userDomain := NewDomain(userStore)
 
-	channel, err := userDomain.createChannel("", "some-name")
+	room, err := userDomain.createRoom("", "some-name")
 	assert.Nil(t, err)
 
-	assert.Nil(t, uuid.Validate(channel.ID))
+	assert.Nil(t, uuid.Validate(room.ID))
 }

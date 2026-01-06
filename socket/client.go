@@ -99,7 +99,7 @@ func (c *client) pumpWrite() {
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 
 			if !ok {
-				// The hub closed the channel.
+				// The hub has closed the channel.
 				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
