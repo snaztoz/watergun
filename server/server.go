@@ -15,6 +15,7 @@ import (
 
 	"github.com/snaztoz/watergun/channel"
 	"github.com/snaztoz/watergun/log"
+	"github.com/snaztoz/watergun/socket"
 	"github.com/snaztoz/watergun/user"
 )
 
@@ -60,8 +61,7 @@ func handler() http.Handler {
 	r := chi.NewRouter()
 
 	bootstrapMiddlewares(r)
-	bootstrapPublicRoutes(r)
-	bootstrapAdminRoutes(r)
+	bootstrapRoutes(r)
 
 	return r
 }
@@ -78,24 +78,20 @@ func bootstrapMiddlewares(r *chi.Mux) {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.RedirectSlashes)
 	r.Use(middleware.Timeout(60 * time.Second))
-}
 
-func bootstrapPublicRoutes(r *chi.Mux) {
 	r.Use(middleware.Heartbeat("/up"))
-
-	r.Get("/socket", handleWS())
 }
 
-func bootstrapAdminRoutes(r *chi.Mux) {
+func bootstrapRoutes(r *chi.Mux) {
+	socketHub := socket.NewHub()
+	socketHandler := socket.NewHandler(socketHub)
+	go socketHub.Run()
+
+	r.Get("/socket", socketHandler.Handle)
+
 	r.Route("/admin", func(r chi.Router) {
 		r.Use(adminRoutesAuth)
-
-		r.Use(func(next http.Handler) http.Handler {
-			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				next.ServeHTTP(w, r)
-			})
-		})
+		r.Use(jsonContentType)
 
 		r.Route("/channels", func(r chi.Router) {
 			channelStore := channel.NewStore()
@@ -136,6 +132,13 @@ func adminRoutesAuth(next http.Handler) http.Handler {
 			return
 		}
 
+		next.ServeHTTP(w, r)
+	})
+}
+
+func jsonContentType(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 		next.ServeHTTP(w, r)
 	})
 }

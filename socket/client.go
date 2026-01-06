@@ -2,10 +2,11 @@ package socket
 
 import (
 	"encoding/json"
-	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+
 	"github.com/snaztoz/watergun/log"
 )
 
@@ -26,33 +27,29 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-func ServeWS(hub *Hub, w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
+func newClient(hub *hub, conn *websocket.Conn) *client {
+	uuidV7, err := uuid.NewV7()
 	if err != nil {
-		log.Error("Failed to upgrade to WebSocket", "err", err)
-		return
+		log.Error("Failed to generate client ID", "err", err)
+		return nil
 	}
 
-	client := &Client{
+	return &client{
+		id:   uuidV7.String(),
 		hub:  hub,
 		conn: conn,
 		send: make(chan []byte, 256),
 	}
-
-	client.hub.register <- client
-
-	go client.setWritePump()
-	go client.setReadPump()
 }
 
-type Client struct {
-	hub    *Hub
-	conn   *websocket.Conn
-	send   chan []byte
-	userID string
+type client struct {
+	id   string
+	hub  *hub
+	conn *websocket.Conn
+	send chan []byte
 }
 
-func (c *Client) setReadPump() {
+func (c *client) pumpRead() {
 	defer func() {
 		c.hub.unregister <- c
 		c.conn.Close()
@@ -69,11 +66,11 @@ func (c *Client) setReadPump() {
 	c.readMessages()
 }
 
-func (c *Client) readMessages() {
+func (c *client) readMessages() {
 	for {
 		_, rawMessage, err := c.conn.ReadMessage()
 		if err != nil {
-			if c.isConnectionClosedUnexpectedly(err) {
+			if isConnectionClosedUnexpectedly(err) {
 				log.Error("Connection closed unexpectedly", "err", err)
 			}
 			break
@@ -84,17 +81,12 @@ func (c *Client) readMessages() {
 			log.Error("Failed to read message", "err", err)
 			continue
 		}
-		message.UserID = c.userID
 
-		if message.shouldBeBlocked() {
-			continue
-		}
-
-		c.hub.broadcast <- []byte(message.Content)
+		c.hub.processMessage(c, &message)
 	}
 }
 
-func (c *Client) setWritePump() {
+func (c *client) pumpWrite() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
@@ -130,38 +122,22 @@ func (c *Client) setWritePump() {
 			}
 
 		case <-ticker.C:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-
-			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+			if err := c.pingConnection(); err != nil {
 				return
 			}
 		}
 	}
 }
 
-func (c *Client) isConnectionClosedUnexpectedly(err error) bool {
+func (c *client) pingConnection() error {
+	c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+	return c.conn.WriteMessage(websocket.PingMessage, nil)
+}
+
+func isConnectionClosedUnexpectedly(err error) bool {
 	return websocket.IsUnexpectedCloseError(
 		err,
 		websocket.CloseGoingAway,
 		websocket.CloseAbnormalClosure,
 	)
-}
-
-type ReadMessage struct {
-	UserID      string `json:"-"`
-	MessageType string `json:"type"`
-	Content     string `json:"content"`
-}
-
-func (m *ReadMessage) isAuthenticated() bool {
-	return m.UserID != ""
-}
-
-func (m *ReadMessage) isForAuthentication() bool {
-	return m.MessageType == "auth"
-}
-
-func (m *ReadMessage) shouldBeBlocked() bool {
-	return (!m.isAuthenticated() && !m.isForAuthentication()) ||
-		(m.isAuthenticated() && m.isForAuthentication())
 }
