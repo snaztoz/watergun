@@ -15,7 +15,7 @@ import (
 	"github.com/snaztoz/watergun/serverctx"
 )
 
-func TestRoutesBearerProtectionParser(t *testing.T) {
+func TestAccessTokenParser(t *testing.T) {
 	t.Run("with bearer token", func(t *testing.T) {
 		req := httptest.NewRequest("GET", "/admin", nil)
 		rr := httptest.NewRecorder()
@@ -24,7 +24,20 @@ func TestRoutesBearerProtectionParser(t *testing.T) {
 
 		req.Header.Add("Authorization", "Bearer "+key)
 
-		bearerTokenParser(
+		accessTokenParser(allowQueryParamToken)(
+			http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+				assert.Equal(t, key, r.Context().Value(serverctx.AccessTokenKey))
+			}),
+		).ServeHTTP(rr, req)
+	})
+
+	t.Run("with query param token", func(t *testing.T) {
+		key := "some-key-here"
+
+		req := httptest.NewRequest("GET", "/socket?token="+key, nil)
+		rr := httptest.NewRecorder()
+
+		accessTokenParser(allowQueryParamToken)(
 			http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, key, r.Context().Value(serverctx.AccessTokenKey))
 			}),
@@ -35,8 +48,21 @@ func TestRoutesBearerProtectionParser(t *testing.T) {
 		req := httptest.NewRequest("GET", "/admin", nil)
 		rr := httptest.NewRecorder()
 
-		bearerTokenParser(
+		accessTokenParser(allowQueryParamToken)(
 			http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {}),
+		).ServeHTTP(rr, req)
+
+		assert.NotEqual(t, 403, rr.Result().StatusCode)
+	})
+
+	t.Run("with unpermitted query param token", func(t *testing.T) {
+		key := "some-key-here"
+
+		req := httptest.NewRequest("GET", "/socket?token="+key, nil)
+		rr := httptest.NewRecorder()
+
+		accessTokenParser(!allowQueryParamToken)(
+			http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {}),
 		).ServeHTTP(rr, req)
 
 		assert.NotEqual(t, 403, rr.Result().StatusCode)
@@ -60,7 +86,7 @@ func TestSocketRouteAuth(t *testing.T) {
 
 		req.Header.Add("Authorization", "Bearer "+token)
 
-		bearerTokenParser(
+		accessTokenParser(allowQueryParamToken)(
 			socketRouteAuth(privateKey.Public())(
 				http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
 					assert.Equal(t, "some-user-id", r.Context().Value(serverctx.UserIDKey))
@@ -75,7 +101,7 @@ func TestSocketRouteAuth(t *testing.T) {
 		req := httptest.NewRequest("GET", "/socket", nil)
 		rr := httptest.NewRecorder()
 
-		bearerTokenParser(
+		accessTokenParser(allowQueryParamToken)(
 			socketRouteAuth(privateKey.Public())(
 				http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {}),
 			),
@@ -98,7 +124,7 @@ func TestSocketRouteAuth(t *testing.T) {
 
 		req.Header.Add("Authorization", "Bearer "+token)
 
-		bearerTokenParser(
+		accessTokenParser(allowQueryParamToken)(
 			socketRouteAuth(privateKey.Public())(
 				http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {}),
 			),
@@ -115,7 +141,7 @@ func TestAdminRoutesAuth(t *testing.T) {
 
 		req.Header.Add("Authorization", "Bearer "+adminAPIKey())
 
-		bearerTokenParser(
+		accessTokenParser(allowQueryParamToken)(
 			adminRoutesAuth(
 				http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {}),
 			),
@@ -128,7 +154,7 @@ func TestAdminRoutesAuth(t *testing.T) {
 		req := httptest.NewRequest("GET", "/admin", nil)
 		rr := httptest.NewRecorder()
 
-		bearerTokenParser(
+		accessTokenParser(allowQueryParamToken)(
 			adminRoutesAuth(
 				http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {}),
 			),
@@ -143,7 +169,7 @@ func TestAdminRoutesAuth(t *testing.T) {
 
 		req.Header.Add("Authorization", "Bearer\t") // use tab instead of space
 
-		bearerTokenParser(
+		accessTokenParser(allowQueryParamToken)(
 			adminRoutesAuth(
 				http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {}),
 			),

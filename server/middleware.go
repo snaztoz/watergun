@@ -10,19 +10,38 @@ import (
 	"github.com/snaztoz/watergun/socket"
 )
 
-func bearerTokenParser(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authorization := r.Header.Get("Authorization")
+const (
+	allowQueryParamToken = true
+)
 
-		ctx := r.Context()
-
-		if strings.HasPrefix(authorization, "Bearer ") {
-			key := strings.TrimPrefix(authorization, "Bearer ")
-			ctx = context.WithValue(ctx, serverctx.AccessTokenKey, key)
+func accessTokenParser(allowQueryParamToken bool) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		hasBearerAuthorizationHeader := func(r *http.Request) bool {
+			header := r.Header.Get("Authorization")
+			return header != "" && strings.HasPrefix(header, "Bearer ")
 		}
 
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
+		hasQueryParamToken := func(r *http.Request) bool {
+			return r.URL.Query().Has("token")
+		}
+
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+
+			switch {
+			case hasBearerAuthorizationHeader(r):
+				header := r.Header.Get("Authorization")
+				key := strings.TrimPrefix(header, "Bearer ")
+				ctx = context.WithValue(ctx, serverctx.AccessTokenKey, key)
+
+			case allowQueryParamToken && hasQueryParamToken(r):
+				token := r.URL.Query().Get("token")
+				ctx = context.WithValue(ctx, serverctx.AccessTokenKey, token)
+			}
+
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
 }
 
 func socketRouteAuth(key crypto.PublicKey) func(http.Handler) http.Handler {

@@ -79,12 +79,11 @@ func bootstrapMiddlewares(r *chi.Mux) {
 	r.Use(middleware.Timeout(60 * time.Second))
 
 	r.Use(middleware.Heartbeat("/up"))
-
-	r.Use(bearerTokenParser)
 }
 
 func bootstrapRoutes(r *chi.Mux) {
 	r.Route("/socket", func(r chi.Router) {
+		r.Use(accessTokenParser(allowQueryParamToken))
 		r.Use(socketRouteAuth("SOME-KEY-CHANGE-LATER"))
 
 		socketHub := socket.NewHub()
@@ -96,6 +95,7 @@ func bootstrapRoutes(r *chi.Mux) {
 	})
 
 	r.Route("/admin", func(r chi.Router) {
+		r.Use(accessTokenParser(!allowQueryParamToken))
 		r.Use(adminRoutesAuth)
 		r.Use(jsonContentType)
 
