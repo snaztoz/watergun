@@ -3,11 +3,11 @@ OUT_FILE = "./tmp/watergun"
 
 .PHONY: build test clean
 
-build:
+build: clean
 	go build -o $(OUT_FILE) $(MAIN_FILE)
 
 test:
 	go test "./..."
 
 clean:
-	rm $(OUT_FILE)
+	rm -f $(OUT_FILE)

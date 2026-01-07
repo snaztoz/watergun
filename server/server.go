@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -80,14 +79,21 @@ func bootstrapMiddlewares(r *chi.Mux) {
 	r.Use(middleware.Timeout(60 * time.Second))
 
 	r.Use(middleware.Heartbeat("/up"))
+
+	r.Use(bearerTokenParser)
 }
 
 func bootstrapRoutes(r *chi.Mux) {
-	socketHub := socket.NewHub()
-	socketHandler := socket.NewHandler(socketHub)
-	go socketHub.Run()
+	r.Route("/socket", func(r chi.Router) {
+		r.Use(socketRouteAuth("SOME-KEY-CHANGE-LATER"))
 
-	r.Get("/socket", socketHandler.Handle)
+		socketHub := socket.NewHub()
+		socketHandler := socket.NewHandler(socketHub)
+
+		go socketHub.Run()
+
+		r.Get("/socket", socketHandler.Handle)
+	})
 
 	r.Route("/admin", func(r chi.Router) {
 		r.Use(adminRoutesAuth)
@@ -115,30 +121,5 @@ func bootstrapRoutes(r *chi.Mux) {
 			r.Post("/", userHandler.CreateUser)
 			r.Get("/{id}", userHandler.FetchUser)
 		})
-	})
-}
-
-func adminRoutesAuth(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authorization := r.Header.Get("Authorization")
-
-		if !strings.HasPrefix(authorization, "Bearer ") {
-			http.Error(w, http.StatusText(403), 403)
-			return
-		}
-
-		if key := strings.TrimPrefix(authorization, "Bearer "); key != adminAPIKey() {
-			http.Error(w, http.StatusText(403), 403)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
-}
-
-func jsonContentType(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		next.ServeHTTP(w, r)
 	})
 }
