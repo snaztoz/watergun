@@ -18,12 +18,12 @@ func NewHub(roomDomain *room.Domain) *hub {
 }
 
 type hub struct {
-	roomDomain *room.Domain
-
 	broadcastQueue chan *broadcastMessage
 	clients        map[userID]*client
 	register       chan *client
 	unregister     chan *client
+
+	roomDomain *room.Domain
 }
 
 func (h *hub) Run() {
@@ -54,7 +54,7 @@ func (h *hub) processMessage(senderID userID, msg *ReadMessage) {
 		Content:  msg.Content,
 	}
 
-	recipients := make([]userID, 0, len(room.Participants)-1)
+	recipients := make([]userID, 0, len(room.Participants))
 	for _, participant := range room.Participants {
 		if userID(participant.UserID) != senderID {
 			recipients = append(recipients, userID(participant.UserID))
