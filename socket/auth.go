@@ -24,7 +24,7 @@ func Authenticate(token string, key crypto.PublicKey) (string, error) {
 
 	claims, ok := parsed.Claims.(jwt.MapClaims)
 	if !ok {
-		return "", errors.New("Failed to parse JWT claims")
+		return "", errors.New("failed to parse JWT claims")
 	}
 
 	return claims.GetSubject()
