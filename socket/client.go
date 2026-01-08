@@ -20,14 +20,19 @@ const (
 var (
 	newline = []byte{'\n'}
 	space   = []byte{' '}
+
+	upgrader = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+	}
 )
 
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-}
+type (
+	clientID string
+	userID   string
+)
 
-func newClient(hub *hub, conn *websocket.Conn) *client {
+func newClient(userID userID, hub *hub, conn *websocket.Conn) *client {
 	uuidV7, err := uuid.NewV7()
 	if err != nil {
 		log.Error("Failed to generate client ID", "err", err)
@@ -35,18 +40,20 @@ func newClient(hub *hub, conn *websocket.Conn) *client {
 	}
 
 	return &client{
-		id:   uuidV7.String(),
-		hub:  hub,
-		conn: conn,
-		send: make(chan []byte, 256),
+		id:     clientID(uuidV7.String()),
+		userID: userID,
+		hub:    hub,
+		conn:   conn,
+		send:   make(chan []byte, 256),
 	}
 }
 
 type client struct {
-	id   string
-	hub  *hub
-	conn *websocket.Conn
-	send chan []byte
+	id     clientID
+	userID userID
+	hub    *hub
+	conn   *websocket.Conn
+	send   chan []byte
 }
 
 func (c *client) pumpRead() {
@@ -68,7 +75,7 @@ func (c *client) pumpRead() {
 
 func (c *client) readMessages() {
 	for {
-		_, rawMessage, err := c.conn.ReadMessage()
+		_, rawMsg, err := c.conn.ReadMessage()
 		if err != nil {
 			if isConnectionClosedUnexpectedly(err) {
 				log.Error("Connection closed unexpectedly", "err", err)
@@ -76,13 +83,13 @@ func (c *client) readMessages() {
 			break
 		}
 
-		var message ReadMessage
-		if err := json.Unmarshal(rawMessage, &message); err != nil {
+		var msg ReadMessage
+		if err := json.Unmarshal(rawMsg, &msg); err != nil {
 			log.Error("Failed to read message", "err", err)
 			continue
 		}
 
-		c.hub.processMessage(c, &message)
+		c.hub.processMessage(c.userID, &msg)
 	}
 }
 

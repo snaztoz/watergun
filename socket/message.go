@@ -1,11 +1,12 @@
 package socket
 
 type ReadMessage struct {
-	UserID  string `json:"-"`
-	Room    string `json:"room"`
+	RoomID  string `json:"room_id"`
 	Content string `json:"content"`
 }
 
-func (m *ReadMessage) isForAuthentication() bool {
-	return m.Room == "watergun:auth"
+type WriteMessage struct {
+	SenderID string `json:"sender_id"`
+	RoomID   string `json:"room_id"`
+	Content  string `json:"content"`
 }

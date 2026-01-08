@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/snaztoz/watergun/log"
+	"github.com/snaztoz/watergun/serverctx"
 )
 
 func NewHandler(hub *hub) *handler {
@@ -21,7 +22,8 @@ func (h *handler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := newClient(h.hub, conn)
+	id := r.Context().Value(serverctx.UserIDKey).(string)
+	client := newClient(userID(id), h.hub, conn)
 
 	h.hub.register <- client
 

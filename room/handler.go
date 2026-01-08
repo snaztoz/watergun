@@ -10,12 +10,12 @@ import (
 	"github.com/snaztoz/watergun/response"
 )
 
-func NewHandler(domain *domain) *handler {
+func NewHandler(domain *Domain) *handler {
 	return &handler{domain: domain}
 }
 
 type handler struct {
-	domain *domain
+	domain *Domain
 }
 
 func (h *handler) CreateRoom(w http.ResponseWriter, r *http.Request) {
@@ -43,7 +43,7 @@ func (h *handler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 func (h *handler) FetchRoom(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
-	room := h.domain.fetchRoom(id)
+	room := h.domain.FetchRoom(id)
 	if room == nil {
 		log.Error("Room does not exist", "id", id)
 		http.Error(w, "Room does not exist", 404)

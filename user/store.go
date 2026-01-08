@@ -6,17 +6,17 @@ import (
 
 func NewStore() *store {
 	return &store{
-		users: make(map[string]*User),
+		users: make(map[string]*Model),
 	}
 }
 
 type store struct {
-	users map[string]*User
+	users map[string]*Model
 }
 
-func (s *store) createUser(id string) (*User, error) {
+func (s *store) createUser(id string) (*Model, error) {
 	now := time.Now()
-	user := &User{
+	user := &Model{
 		ID:        id,
 		CreatedAt: now,
 		UpdatedAt: now,
@@ -27,7 +27,7 @@ func (s *store) createUser(id string) (*User, error) {
 	return user, nil
 }
 
-func (s *store) fetchUser(id string) *User {
+func (s *store) fetchUser(id string) *Model {
 	user, exist := s.users[id]
 	if !exist {
 		return nil

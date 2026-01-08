@@ -6,17 +6,17 @@ import (
 	"github.com/snaztoz/watergun/log"
 )
 
-func NewDomain(store *store) *domain {
-	return &domain{
+func NewDomain(store *store) *Domain {
+	return &Domain{
 		store: store,
 	}
 }
 
-type domain struct {
+type Domain struct {
 	store *store
 }
 
-func (d *domain) createRoom(id, name string) (*Model, error) {
+func (d *Domain) createRoom(id, name string) (*Model, error) {
 	if id == "" {
 		uuidV7, err := uuid.NewV7()
 		if err != nil {
@@ -30,11 +30,11 @@ func (d *domain) createRoom(id, name string) (*Model, error) {
 	return d.store.createRoom(id, name)
 }
 
-func (d *domain) fetchRoom(id string) *Model {
+func (d *Domain) FetchRoom(id string) *Model {
 	return d.store.fetchRoom(id)
 }
 
-func (d *domain) createParticipant(roomID, userID string, canPublish bool) (*ParticipantModel, error) {
+func (d *Domain) createParticipant(roomID, userID string, canPublish bool) (*ParticipantModel, error) {
 	uuidV7, err := uuid.NewV7()
 	if err != nil {
 		log.Error("Failed to generate UUID", "err", err)
@@ -49,6 +49,6 @@ func (d *domain) createParticipant(roomID, userID string, canPublish bool) (*Par
 	)
 }
 
-func (d *domain) fetchParticipantsList(roomID string) []*ParticipantModel {
+func (d *Domain) fetchParticipantsList(roomID string) []*ParticipantModel {
 	return d.store.fetchParticipantsList(roomID)
 }
