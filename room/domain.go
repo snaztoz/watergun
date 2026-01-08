@@ -20,7 +20,7 @@ func (d *Domain) createRoom(id, name string) (*Model, error) {
 	if id == "" {
 		uuidV7, err := uuid.NewV7()
 		if err != nil {
-			log.Error("Failed to generate UUID", "err", err)
+			log.Error("failed to generate UUID", "err", err)
 			return nil, err
 		}
 
@@ -37,7 +37,7 @@ func (d *Domain) FetchRoom(id string) *Model {
 func (d *Domain) createParticipant(roomID, userID string, canPublish bool) (*ParticipantModel, error) {
 	uuidV7, err := uuid.NewV7()
 	if err != nil {
-		log.Error("Failed to generate UUID", "err", err)
+		log.Error("failed to generate UUID", "err", err)
 		return nil, err
 	}
 

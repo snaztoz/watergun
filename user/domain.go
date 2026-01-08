@@ -20,7 +20,7 @@ func (d *domain) createUser(id string) (*Model, error) {
 	if id == "" {
 		uuidV7, err := uuid.NewV7()
 		if err != nil {
-			log.Error("Failed to generate UUID", "err", err)
+			log.Error("failed to generate UUID", "err", err)
 			return nil, err
 		}
 

@@ -18,7 +18,7 @@ type handler struct {
 func (h *handler) Handle(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Error("Failed to upgrade to WebSocket", "err", err)
+		log.Error("failed to upgrade to WebSocket", "err", err)
 		return
 	}
 

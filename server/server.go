@@ -34,26 +34,26 @@ type Server struct {
 }
 
 func (s *Server) Run() {
-	log.Info(fmt.Sprintf("Server is listening at port %s", s.port))
+	log.Info("server is listening", "port", s.port)
 
 	if err := s.httpServer.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
-		log.Error("Server failed to listen at the specified port", "err", err)
+		log.Error("server failed to listen at the specified port", "err", err)
 		return
 	}
 }
 
 func (s *Server) Stop() {
-	log.Info("Shutting down the server...")
+	log.Info("shutting down the server")
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := s.httpServer.Shutdown(shutdownCtx); err != nil {
-		log.Error("Failed to gracefully shutting down the server", "err", err)
+		log.Error("failed to gracefully shutting down the server", "err", err)
 		return
 	}
 
-	log.Info("Server shutted down")
+	log.Info("server shutted down")
 }
 
 func handler() http.Handler {

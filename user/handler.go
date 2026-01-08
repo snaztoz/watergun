@@ -45,7 +45,7 @@ func (h *handler) FetchUser(w http.ResponseWriter, r *http.Request) {
 
 	user := h.domain.fetchUser(id)
 	if user == nil {
-		log.Error("User does not exist", "id", id)
+		log.Error("user does not exist", "id", id)
 		http.Error(w, "User does not exist", 404)
 		return
 	}

@@ -32,7 +32,7 @@ type MessageDomain struct {
 func (d *MessageDomain) SendMessage(userID, roomID, content string) (*Message, error) {
 	id, err := uuid.NewV7()
 	if err != nil {
-		log.Error("Failed to generate UUID", "err", err)
+		log.Error("failed to generate UUID", "err", err)
 		return nil, err
 	}
 
@@ -45,12 +45,12 @@ func (d *MessageDomain) SendMessage(userID, roomID, content string) (*Message, e
 	}
 
 	if err := d.storer.Store(m); err != nil {
-		log.Error("Failed to persist message", "err", err)
+		log.Error("failed to persist message", "err", err)
 		return nil, err
 	}
 
 	if err := d.broadcaster.Broadcast(m); err != nil {
-		log.Error("Failed to broadcast message", "err", err)
+		log.Error("failed to broadcast message", "err", err)
 		return nil, err
 	}
 

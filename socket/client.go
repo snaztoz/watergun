@@ -35,7 +35,7 @@ type (
 func newClient(userID userID, hub *hub, conn *websocket.Conn) *client {
 	uuidV7, err := uuid.NewV7()
 	if err != nil {
-		log.Error("Failed to generate client ID", "err", err)
+		log.Error("failed to generate client ID", "err", err)
 		return nil
 	}
 
@@ -78,14 +78,14 @@ func (c *client) readMessages() {
 		_, rawMsg, err := c.conn.ReadMessage()
 		if err != nil {
 			if isConnectionClosedUnexpectedly(err) {
-				log.Error("Connection closed unexpectedly", "err", err)
+				log.Error("connection closed unexpectedly", "err", err)
 			}
 			break
 		}
 
 		var msg ReadMessage
 		if err := json.Unmarshal(rawMsg, &msg); err != nil {
-			log.Error("Failed to read message", "err", err)
+			log.Error("failed to read message", "err", err)
 			continue
 		}
 

@@ -45,7 +45,7 @@ func (h *handler) FetchRoom(w http.ResponseWriter, r *http.Request) {
 
 	room := h.domain.FetchRoom(id)
 	if room == nil {
-		log.Error("Room does not exist", "id", id)
+		log.Error("room does not exist", "id", id)
 		http.Error(w, "Room does not exist", 404)
 		return
 	}
