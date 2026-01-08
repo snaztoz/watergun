@@ -23,7 +23,8 @@ func (h *handler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 
 	var dto RoomCreationDTO
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
-		response.SendErrorJSON(w, err, "Failed to decode request body", 400)
+		log.Error("failed to decode request body", "err", err)
+		response.SendErrorJSON(w, "failed to decode request body", 400)
 		return
 	}
 
@@ -31,7 +32,8 @@ func (h *handler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 
 	room, err := h.domain.createRoom(dto.ID, dto.Name)
 	if err != nil {
-		response.SendErrorJSON(w, err, "Failed to create room", 422)
+		log.Error("failed to create room", "err", err)
+		response.SendErrorJSON(w, "failed to create room", 422)
 		return
 	}
 
@@ -46,7 +48,7 @@ func (h *handler) FetchRoom(w http.ResponseWriter, r *http.Request) {
 	room := h.domain.FetchRoom(id)
 	if room == nil {
 		log.Error("room does not exist", "id", id)
-		http.Error(w, "Room does not exist", 404)
+		http.Error(w, "room does not exist", 404)
 		return
 	}
 
@@ -60,7 +62,8 @@ func (h *handler) CreateParticipant(w http.ResponseWriter, r *http.Request) {
 
 	var dto ParticipantCreationDTO
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
-		response.SendErrorJSON(w, err, "Failed to decode request body", 400)
+		log.Error("failed to decode request body", "err", err)
+		response.SendErrorJSON(w, "failed to decode request body", 400)
 		return
 	}
 
@@ -72,7 +75,8 @@ func (h *handler) CreateParticipant(w http.ResponseWriter, r *http.Request) {
 		dto.CanPublish,
 	)
 	if err != nil {
-		response.SendErrorJSON(w, err, "Failed to create room participant", 422)
+		log.Error("failed to create room participant", "err", err)
+		response.SendErrorJSON(w, "failed to create room participant", 422)
 		return
 	}
 

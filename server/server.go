@@ -85,12 +85,15 @@ func bootstrapRoutes(r *chi.Mux) {
 	roomStore := room.NewStore()
 	roomDomain := room.NewDomain(roomStore)
 
+	userStore := user.NewStore()
+	userDomain := user.NewDomain(userStore)
+
 	r.Route("/socket", func(r chi.Router) {
 		r.Use(accessTokenParser(allowQueryParamToken))
 		r.Use(socketRouteAuth("SOME-KEY-CHANGE-LATER"))
 
 		socketHub := socket.NewHub(roomDomain)
-		socketHandler := socket.NewHandler(socketHub)
+		socketHandler := socket.NewHandler(socketHub, userDomain)
 
 		go socketHub.Run()
 
@@ -115,8 +118,6 @@ func bootstrapRoutes(r *chi.Mux) {
 		})
 
 		r.Route("/users", func(r chi.Router) {
-			userStore := user.NewStore()
-			userDomain := user.NewDomain(userStore)
 			userHandler := user.NewHandler(userDomain)
 
 			r.Post("/", userHandler.CreateUser)

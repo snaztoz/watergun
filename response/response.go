@@ -3,8 +3,6 @@ package response
 import (
 	"encoding/json"
 	"net/http"
-
-	"github.com/snaztoz/watergun/log"
 )
 
 func SendJSON(w http.ResponseWriter, body any) {
@@ -13,10 +11,7 @@ func SendJSON(w http.ResponseWriter, body any) {
 	}
 }
 
-func SendErrorJSON(w http.ResponseWriter, err error, message string, statusCode int) {
-	log.Error(message, "err", err)
-
+func SendErrorJSON(w http.ResponseWriter, msg string, statusCode int) {
 	w.WriteHeader(statusCode)
-
-	SendJSON(w, map[string]any{"err": err.Error()})
+	SendJSON(w, map[string]any{"err": msg})
 }
