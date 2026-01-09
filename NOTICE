@@ -1,0 +1,14 @@
+Watergun
+Copyright 2026 Hafidh Muqsithanova Sukarno
+
+This product includes software developed by the following projects:
+
+- github.com/go-chi/chi
+- github.com/go-chi/httplog
+- github.com/golang-jwt/jwt
+- github.com/google/uuid
+- github.com/gorilla/websocket
+- github.com/spf13/cobra
+- github.com/stretchr/testify
+
+Third-party license texts are available in the LICENSES/ directory.
