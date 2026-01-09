@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"crypto"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -18,25 +19,28 @@ import (
 	"github.com/snaztoz/watergun/user"
 )
 
-func New(port string) *Server {
+func New(port string, publicKey crypto.PublicKey) *Server {
 	return &Server{
-		port: port,
-		httpServer: &http.Server{
-			Addr:    fmt.Sprintf(":%s", port),
-			Handler: handler(),
-		},
+		port:      port,
+		publicKey: publicKey,
 	}
 }
 
 type Server struct {
-	httpServer *http.Server
-	port       string
+	port      string
+	publicKey crypto.PublicKey
+	srv       *http.Server
 }
 
 func (s *Server) Run() {
+	s.srv = &http.Server{
+		Addr:    fmt.Sprintf(":%s", s.port),
+		Handler: s.handler(),
+	}
+
 	log.Info("server is listening", "port", s.port)
 
-	if err := s.httpServer.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+	if err := s.srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 		log.Error("server failed to listen at the specified port", "err", err)
 		return
 	}
@@ -48,7 +52,7 @@ func (s *Server) Stop() {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := s.httpServer.Shutdown(shutdownCtx); err != nil {
+	if err := s.srv.Shutdown(shutdownCtx); err != nil {
 		log.Error("failed to gracefully shutting down the server", "err", err)
 		return
 	}
@@ -56,16 +60,16 @@ func (s *Server) Stop() {
 	log.Info("server shutted down")
 }
 
-func handler() http.Handler {
+func (s *Server) handler() http.Handler {
 	r := chi.NewRouter()
 
-	bootstrapMiddlewares(r)
-	bootstrapRoutes(r)
+	s.bootstrapMiddlewares(r)
+	s.bootstrapRoutes(r)
 
 	return r
 }
 
-func bootstrapMiddlewares(r *chi.Mux) {
+func (*Server) bootstrapMiddlewares(r *chi.Mux) {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 
@@ -81,7 +85,7 @@ func bootstrapMiddlewares(r *chi.Mux) {
 	r.Use(middleware.Heartbeat("/up"))
 }
 
-func bootstrapRoutes(r *chi.Mux) {
+func (s *Server) bootstrapRoutes(r *chi.Mux) {
 	roomStore := room.NewStore()
 	roomDomain := room.NewDomain(roomStore)
 
@@ -90,14 +94,14 @@ func bootstrapRoutes(r *chi.Mux) {
 
 	r.Route("/socket", func(r chi.Router) {
 		r.Use(accessTokenParser(allowQueryParamToken))
-		r.Use(socketRouteAuth("SOME-KEY-CHANGE-LATER"))
+		r.Use(socketRouteAuth(s.publicKey))
 
 		socketHub := socket.NewHub(roomDomain)
 		socketHandler := socket.NewHandler(socketHub, userDomain)
 
 		go socketHub.Run()
 
-		r.Get("/socket", socketHandler.Handle)
+		r.Get("/", socketHandler.Handle)
 	})
 
 	r.Route("/admin", func(r chi.Router) {
