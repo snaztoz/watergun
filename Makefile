@@ -2,7 +2,8 @@ VERSION 	?= dev
 GIT_COMMIT 	:= $(shell git rev-parse --short HEAD)
 BUILD_DATE 	:= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 
-TMP_DIR 	:= tmp
+DIST_DIR 	:= dist
+TMP_DIR		:= tmp
 MAIN_FILE 	:= watergun.go
 BIN			:= watergun
 DIST 		:= watergun-$(VERSION).tar.gz
@@ -21,8 +22,8 @@ build: clean
 		"./$(MAIN_FILE)"
 
 dist: build
-	cp -r LICENSES LICENSE NOTICE ./$(TMP_DIR)
-	tar -czf ./$(TMP_DIR)/$(DIST) -C ./$(TMP_DIR)\
+	cp -r ./$(TMP_DIR)/$(BIN) LICENSES LICENSE NOTICE ./$(DIST_DIR)
+	tar -czf ./$(DIST_DIR)/$(DIST) -C ./$(DIST_DIR)\
 		$(BIN) \
 		LICENSES \
 		LICENSE \
@@ -32,4 +33,4 @@ test:
 	go test "./..."
 
 clean:
-	find ./$(TMP_DIR) -mindepth 1 ! -name '.gitignore' -delete
+	find ./$(DIST_DIR) -mindepth 1 ! -name '.gitignore' -delete
