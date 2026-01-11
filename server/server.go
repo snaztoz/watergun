@@ -19,15 +19,25 @@ import (
 	"github.com/snaztoz/watergun/user"
 )
 
-func New(port string, publicKey crypto.PublicKey) *Server {
+const (
+	defaultAdminKey = "ADMIN-INSECURE-KEY"
+)
+
+func New(port string, adminKey string, publicKey crypto.PublicKey) *Server {
+	if adminKey == "" {
+		adminKey = defaultAdminKey
+	}
+
 	return &Server{
 		port:      port,
+		adminKey:  adminKey,
 		publicKey: publicKey,
 	}
 }
 
 type Server struct {
 	port      string
+	adminKey  string
 	publicKey crypto.PublicKey
 	srv       *http.Server
 }
@@ -106,7 +116,7 @@ func (s *Server) bootstrapRoutes(r *chi.Mux) {
 
 	r.Route("/admin", func(r chi.Router) {
 		r.Use(accessTokenParser(!allowQueryParamToken))
-		r.Use(adminRoutesAuth)
+		r.Use(adminRoutesAuth(s.adminKey))
 		r.Use(jsonContentType)
 
 		r.Route("/rooms", func(r chi.Router) {

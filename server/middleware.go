@@ -66,21 +66,23 @@ func socketRouteAuth(key crypto.PublicKey) func(http.Handler) http.Handler {
 	}
 }
 
-func adminRoutesAuth(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		key, ok := r.Context().Value(serverctx.AccessTokenKey).(string)
-		if !ok {
-			http.Error(w, http.StatusText(403), 403)
-			return
-		}
+func adminRoutesAuth(adminKey string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			key, ok := r.Context().Value(serverctx.AccessTokenKey).(string)
+			if !ok {
+				http.Error(w, http.StatusText(403), 403)
+				return
+			}
 
-		if key != adminAPIKey() {
-			http.Error(w, http.StatusText(403), 403)
-			return
-		}
+			if key != adminKey {
+				http.Error(w, http.StatusText(403), 403)
+				return
+			}
 
-		next.ServeHTTP(w, r)
-	})
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
 func jsonContentType(next http.Handler) http.Handler {

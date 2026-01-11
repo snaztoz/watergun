@@ -139,10 +139,10 @@ func TestAdminRoutesAuth(t *testing.T) {
 		req := httptest.NewRequest("GET", "/admin", nil)
 		rr := httptest.NewRecorder()
 
-		req.Header.Add("Authorization", "Bearer "+adminAPIKey())
+		req.Header.Add("Authorization", "Bearer test-key")
 
 		accessTokenParser(allowQueryParamToken)(
-			adminRoutesAuth(
+			adminRoutesAuth("test-key")(
 				http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {}),
 			),
 		).ServeHTTP(rr, req)
@@ -155,7 +155,7 @@ func TestAdminRoutesAuth(t *testing.T) {
 		rr := httptest.NewRecorder()
 
 		accessTokenParser(allowQueryParamToken)(
-			adminRoutesAuth(
+			adminRoutesAuth("test-key")(
 				http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {}),
 			),
 		).ServeHTTP(rr, req)
@@ -170,7 +170,7 @@ func TestAdminRoutesAuth(t *testing.T) {
 		req.Header.Add("Authorization", "Bearer\t") // use tab instead of space
 
 		accessTokenParser(allowQueryParamToken)(
-			adminRoutesAuth(
+			adminRoutesAuth("test-key")(
 				http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {}),
 			),
 		).ServeHTTP(rr, req)
