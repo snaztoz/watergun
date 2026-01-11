@@ -12,7 +12,7 @@ DIST 		:= watergun-$(VERSION).tar.gz
 
 all: build
 
-build: clean
+build:
 	go build \
 		-o "./$(TMP_DIR)/$(BIN)" \
 		-ldflags "\
