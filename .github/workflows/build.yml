@@ -65,5 +65,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: watergun_${VERSION}_${{ matrix.os }}_${{ matrix.arch }}
+          name: watergun_${{ env.VERSION }}_${{ matrix.os }}_${{ matrix.arch }}
           path: dist/*
