@@ -12,9 +12,9 @@ import (
 var (
 	versionCmd = &cobra.Command{
 		Use:   "version",
-		Short: "Show version",
+		Short: "Display version",
 		Run: func(_ *cobra.Command, _ []string) {
-			fmt.Printf("Watergun %s-%s-%s (%s, compiled at %s)\n", runtime.GOOS, runtime.GOARCH, version.Version, version.Commit, version.Date)
+			fmt.Printf("watergun %s-%s %s/%s BuildDate=%s\n", version.Version, version.Commit, runtime.GOOS, runtime.GOARCH, version.Date)
 		},
 	}
 )
