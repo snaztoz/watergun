@@ -65,5 +65,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: myproject-${{ matrix.os }}-${{ matrix.arch }}
-          path: dist/*.tar.gz
+          name: watergun_${VERSION}_${{ matrix.os }}_${{ matrix.arch }}
+          path: dist/*
