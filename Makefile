@@ -1,5 +1,5 @@
 VERSION 	?= dev
-GIT_COMMIT 	:= $(shell git rev-parse --short HEAD)
+GIT_COMMIT 	?= $(shell git rev-parse --short HEAD)
 BUILD_DATE 	?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 
 GOOS   		?= $(shell go env "GOOS")
@@ -26,9 +26,9 @@ build:
 		-o "./$(TMP_DIR)/$(BIN)" \
 		-ldflags "\
 		  -s -w \
-		  -X 'github.com/snaztoz/watergun/version.Version=$(VERSION)' \
-		  -X 'github.com/snaztoz/watergun/version.Commit=$(GIT_COMMIT)' \
-		  -X 'github.com/snaztoz/watergun/version.Date=$(BUILD_DATE)'" \
+		  -X github.com/snaztoz/watergun/version.Version=$(VERSION) \
+		  -X github.com/snaztoz/watergun/version.Commit=$(GIT_COMMIT) \
+		  -X github.com/snaztoz/watergun/version.Date=$(BUILD_DATE)" \
 		"./$(MAIN_FILE)"
 
 dist: build
